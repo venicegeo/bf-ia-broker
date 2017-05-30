@@ -37,7 +37,7 @@ This project manages dependencies by populating a `vendor/` directory using the
 [Glide](https://glide.sh) tool. Install it as detailed at its website. Then, in
 the code repository, run:
 
-    $ glide install
+    $ glide install -v
 
 This will retrieve all the relevant dependencies at their appropriate versions
 and place them in `vendor/`, which enables Go to use those versions in building
