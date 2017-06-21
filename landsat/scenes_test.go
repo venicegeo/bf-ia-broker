@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/venicegeo/bf-ia-broker/util"
 )
 
 const (
@@ -54,14 +53,14 @@ func TestGetSceneFolderURL_BadIDs(t *testing.T) {
 	assert.NotNil(t, err, "Scene map not ready did not cause an error")
 	assert.Contains(t, err.Error(), "not ready")
 
-	UpdateSceneMap()
+	UpdateSceneMap(mockLogContext{})
 	_, _, err = GetSceneFolderURL(missingLandSatID, l1tpDataType)
 	assert.NotNil(t, err, "Missing scene ID did not cause an error")
 	assert.Contains(t, err.Error(), "not found")
 }
 
 func TestGetSceneFolderURL_BadDataType(t *testing.T) {
-	UpdateSceneMap()
+	UpdateSceneMap(mockLogContext{})
 	_, _, err := GetSceneFolderURL(goodLandSatID, badDataType)
 	assert.NotNil(t, err, "Invalid scene data type did not cause an error")
 	assert.Contains(t, err.Error(), "Unknown LandSat data type")
@@ -79,7 +78,7 @@ func TestGetSceneFolderURL_L1TSceneID(t *testing.T) {
 }
 
 func TestGetSceneFolderURL_L1TPSceneID(t *testing.T) {
-	UpdateSceneMap()
+	UpdateSceneMap(mockLogContext{})
 	url, prefix, err := GetSceneFolderURL(goodLandSatID, l1tpDataType)
 	assert.Nil(t, err, "%v", err)
 	assert.Equal(t, "https://s3-us-west-2.fakeamazonaws.dummy/thisiscorrect/", url)
@@ -87,7 +86,7 @@ func TestGetSceneFolderURL_L1TPSceneID(t *testing.T) {
 }
 
 func TestUpdateSceneMapAsync_Success(t *testing.T) {
-	done, errored := UpdateSceneMapAsync()
+	done, errored := UpdateSceneMapAsync(mockLogContext{})
 	select {
 	case <-done:
 		return
@@ -99,8 +98,7 @@ func TestUpdateSceneMapAsync_Success(t *testing.T) {
 }
 
 func TestUpdateSceneMapOnTicker(t *testing.T) {
-	ctx := &util.BasicLogContext{}
-	go UpdateSceneMapOnTicker(500*time.Millisecond, ctx)
+	go UpdateSceneMapOnTicker(500*time.Millisecond, mockLogContext{})
 
 	<-time.After(100 * time.Millisecond)
 	assert.True(t, SceneMapIsReady, "Scene map not ready immediately after scene map ticker update")
@@ -109,3 +107,9 @@ func TestUpdateSceneMapOnTicker(t *testing.T) {
 	<-time.After(600 * time.Millisecond)
 	assert.True(t, SceneMapIsReady, "Scene map not ready again after ticker should have gone off")
 }
+
+type mockLogContext struct{}
+
+func (ctx mockLogContext) AppName() string    { return "bf-ia-broker TESTING" }
+func (ctx mockLogContext) SessionID() string  { return "test-session" }
+func (ctx mockLogContext) LogRootDir() string { return "/tmp" }
