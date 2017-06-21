@@ -21,13 +21,14 @@ var sceneMap = map[string]string{}
 var SceneMapIsReady = false
 
 // UpdateSceneMap updates the global scene map from a remote source
-func UpdateSceneMap() (err error) {
+func UpdateSceneMap(ctx util.LogContext) (err error) {
 	landSatHost := os.Getenv("LANDSAT_HOST")
 	if landSatHost == "" {
 		landSatHost = defaultLandSatHost
 	}
 	sceneListURL := fmt.Sprintf("%s/c1/L8/scene_list.gz", landSatHost)
 
+	util.LogAudit(ctx, util.LogAuditInput{Actor: "anon user", Action: "GET", Actee: sceneListURL, Message: "Importing scene list", Severity: util.INFO})
 	c := util.HTTPClient()
 	response, err := c.Get(sceneListURL)
 	if err != nil {
@@ -67,16 +68,17 @@ doneReading:
 
 	sceneMap = newSceneMap
 	SceneMapIsReady = true
+	util.LogAudit(ctx, util.LogAuditInput{Actor: "anon user", Action: "GET", Actee: sceneListURL, Message: "Imported scene list", Severity: util.INFO})
 	return nil
 }
 
 // UpdateSceneMapAsync runs UpdateSceneMap asynchronously, returning
 // completion signals via channels
-func UpdateSceneMapAsync() (done chan bool, errored chan error) {
+func UpdateSceneMapAsync(ctx util.LogContext) (done chan bool, errored chan error) {
 	done = make(chan bool)
 	errored = make(chan error)
 	go func() {
-		err := UpdateSceneMap()
+		err := UpdateSceneMap(ctx)
 		if err == nil {
 			done <- true
 		} else {
@@ -93,7 +95,7 @@ func UpdateSceneMapAsync() (done chan bool, errored chan error) {
 func UpdateSceneMapOnTicker(d time.Duration, ctx util.LogContext) {
 	ticker := time.NewTicker(d)
 	for {
-		done, errored := UpdateSceneMapAsync()
+		done, errored := UpdateSceneMapAsync(ctx)
 		select {
 		case <-done:
 		case err := <-errored:

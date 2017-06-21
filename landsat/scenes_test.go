@@ -47,7 +47,7 @@ func TestGetSceneFolderURL_BadIDs(t *testing.T) {
 	assert.NotNil(t, err, "Scene map not ready did not cause an error")
 	assert.Contains(t, err.Error(), "not ready")
 
-	UpdateSceneMap()
+	UpdateSceneMap(mockLogContext{})
 	_, err = GetSceneFolderURL(missingNewLandSatID)
 	assert.NotNil(t, err, "Missing scene ID did not cause an error")
 	assert.Contains(t, err.Error(), "not found")
@@ -60,14 +60,14 @@ func TestGetSceneFolderURL_OldSceneID(t *testing.T) {
 }
 
 func TestGetSceneFolderURL_NewSceneID(t *testing.T) {
-	UpdateSceneMap()
+	UpdateSceneMap(mockLogContext{})
 	url, err := GetSceneFolderURL(newLandSatID)
 	assert.Nil(t, err, "%v", err)
 	assert.Equal(t, "https://s3-us-west-2.fakeamazonaws.dummy/thisiscorrect/", url)
 }
 
 func TestUpdateSceneMapAsync_Success(t *testing.T) {
-	done, errored := UpdateSceneMapAsync()
+	done, errored := UpdateSceneMapAsync(mockLogContext{})
 	expireTimer := time.NewTimer(1 * time.Second)
 	select {
 	case <-done:
@@ -78,3 +78,9 @@ func TestUpdateSceneMapAsync_Success(t *testing.T) {
 		assert.Fail(t, "Timed out")
 	}
 }
+
+type mockLogContext struct{}
+
+func (ctx mockLogContext) AppName() string    { return "bf-ia-broker TESTING" }
+func (ctx mockLogContext) SessionID() string  { return "test-session" }
+func (ctx mockLogContext) LogRootDir() string { return "/tmp" }

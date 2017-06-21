@@ -190,3 +190,9 @@ func createTestFixtures() (mockPlanet *httptest.Server, mockTides *httptest.Serv
 	testRouter = createTestRouter(mockPlanet.URL, mockTides.URL)
 	return
 }
+
+type mockLogContext struct{}
+
+func (ctx mockLogContext) AppName() string    { return "bf-ia-broker TESTING" }
+func (ctx mockLogContext) SessionID() string  { return "test-session" }
+func (ctx mockLogContext) LogRootDir() string { return "/tmp" }
