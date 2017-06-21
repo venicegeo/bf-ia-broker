@@ -187,7 +187,7 @@ func GetScenes(options SearchOptions, context *Context) (*geojson.FeatureCollect
 		return nil, err
 	}
 	if response, err = doRequest(doRequestInput{method: "POST", inputURL: "data/v1/quick-search", body: requestBody, contentType: "application/json"}, context); err != nil {
-		err = util.LogSimpleErr(context, fmt.Sprintf("Failed to complete Planet Labs request %#v.", req), err)
+		err = util.LogSimpleErr(context, fmt.Sprintf("Failed to complete Planet Labs request %#v.", requestBody), err)
 		return nil, err
 	}
 	switch {
@@ -424,9 +424,10 @@ func transformSRFeature(feature *geojson.Feature, context util.LogContext) *geoj
 	properties["sensorName"], _ = feature.Properties["satellite_id"].(string)
 
 	if landsat.IsValidLandSatID(id) {
-		err := addLandsatS3BandsToProperties(id, &properties)
+		dataType, _ := feature.Properties["data_type"].(string)
+		err := addLandsatS3BandsToProperties(id, dataType, &properties)
 		if err != nil {
-			util.LogAlert(context, err.Error())
+			util.LogAlert(context, err.Error()+" :: in LandSat feature: "+feature.String())
 		}
 	}
 
@@ -434,7 +435,7 @@ func transformSRFeature(feature *geojson.Feature, context util.LogContext) *geoj
 		properties["fileFormat"] = "jpeg2000"
 		err := addSentinelS3BandsToProperties(id, &properties)
 		if err != nil {
-			util.LogAlert(context, err.Error())
+			util.LogAlert(context, err.Error()+" :: in Sentinel-2 feature: "+feature.String())
 		}
 	}
 

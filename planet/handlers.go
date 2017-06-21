@@ -54,7 +54,7 @@ func NewDiscoverHandler() DiscoverHandler {
 	planetBaseURL := os.Getenv("PL_API_URL")
 	if planetBaseURL == "" {
 		util.LogAlert(&util.BasicLogContext{}, "Didn't get Planet Labs API URL from the environment. Using default.")
-		planetBaseURL = "http://api.planet.com"
+		planetBaseURL = "https://api.planet.com"
 	}
 
 	tidesURL := os.Getenv("BF_TIDE_PREDICTION_URL")
@@ -186,7 +186,7 @@ func NewMetadataHandler() MetadataHandler {
 	planetBaseURL := os.Getenv("PL_API_URL")
 	if planetBaseURL == "" {
 		util.LogAlert(&util.BasicLogContext{}, "Didn't get Planet Labs API URL from the environment. Using default.")
-		planetBaseURL = "http://api.planet.com"
+		planetBaseURL = "https://api.planet.com"
 	}
 
 	tidesURL := os.Getenv("BF_TIDE_PREDICTION_URL")
@@ -308,7 +308,7 @@ func NewActivateHandler() ActivateHandler {
 	planetBaseURL := os.Getenv("PL_API_URL")
 	if planetBaseURL == "" {
 		util.LogAlert(&util.BasicLogContext{}, "Didn't get Planet Labs API URL from the environment. Using default.")
-		planetBaseURL = "http://api.planet.com"
+		planetBaseURL = "https://api.planet.com"
 	}
 
 	tidesURL := os.Getenv("BF_TIDE_PREDICTION_URL")

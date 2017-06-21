@@ -10,15 +10,16 @@ import (
 const notLandSatID = "NOT_LANDSAT"
 const malformedLandSatID = "LC8ABC"
 const goodLandSatID = "LC80060522017107LGN00"
+const l1tDataType = "L1T"
 
 func TestAddLandSatBands_ErrorWhenMalformedID(t *testing.T) {
-	err := addLandsatS3BandsToProperties(malformedLandSatID, &map[string]interface{}{})
+	err := addLandsatS3BandsToProperties(malformedLandSatID, l1tDataType, &map[string]interface{}{})
 	assert.NotNil(t, err)
 }
 
 func TestAddLandSatBands(t *testing.T) {
 	properties := map[string]interface{}{}
-	err := addLandsatS3BandsToProperties(goodLandSatID, &properties)
+	err := addLandsatS3BandsToProperties(goodLandSatID, l1tDataType, &properties)
 	assert.Nil(t, err)
 
 	bands, ok := properties["bands"]
