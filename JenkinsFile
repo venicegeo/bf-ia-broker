@@ -129,10 +129,16 @@ node {
                 cf push ${fullAppName} -f manifest.jenkins.yml --hostname ${fullAppName} -d ${pcfDomain} --no-start
                 cf set-env ${fullAppName} SPACE ${pcfSpace}
                 cf set-env ${fullAppName} DOMAIN ${pcfDomain}
-                cf start ${fullAppName}
               """
-          }
-      }
+              try {
+                sh "cf start ${fullAppName}"
+                } catch (Exception e) {
+                  //sh "cf logs --recent ${appName}"
+                  sh "cf delete ${fullAppName} -f"
+                  error("Error during application start. Deleting ${fullAppName} and failing the build.")
+                }
+              }
+            }
       withCredentials([
         [$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: "THREADFIX_KEY"]
       ]) {
@@ -169,18 +175,25 @@ node {
     }
 
     def integrationTestPhase = { String pcfSpace, String pcfDomain ->
-      withCredentials([
-        file(credentialsId: "${POSTMAN_SECRET_FILE}", variable: "POSTMAN_FILE")
-      ]) {
-          withEnv([
-            "PATH+=${root}/integration-tests/node_modules/newman/bin:${nodejs}/bin",
-            "PCF_SPACE=${pcfSpace}",
-            "HOME=${WORKSPACE}"
+      if(!fileExists("integration-tests")) {
+        sh "mkdir -p integration-tests"
+      }
+      // Clone Test Repository
+      withCredentials([file(credentialsId: "${POSTMAN_SECRET_FILE}", variable: 'POSTMAN_FILE')]) {
+        withEnv([
+          "PATH+=${root}/integration-tests/node_modules/newman/bin:${nodejs}/bin",
+          "PCF_SPACE=${env.PHASE_ONE_PCF_SPACE}", "HOME=${WORKSPACE}"
           ]) {
-              dir ("integration-tests") {
-                  sh "ci/blackbox.sh"
-              }
+          dir ("integration-tests") {
+            if(env.GITLAB_CREDS) {
+              git url: "${env.INTEGRATION_GIT_URL}", branch: "${env.INTEGRATION_GIT_BRANCH}", credentialsId: "${env.GITLAB_CREDS}"
+            } else {
+              git url: "${env.INTEGRATION_GIT_URL}", branch: "${env.INTEGRATION_GIT_BRANCH}"
+            }
+            sh "npm install newman@2"
+            sh "/bin/bash ci/beachfront.sh"
           }
+        }
       }
     }
 
@@ -192,12 +205,16 @@ node {
           integrationTestPhase(env.PHASE_ONE_PCF_SPACE, env.PHASE_ONE_PCF_DOMAIN)
         }
     }
-    stage("Phase Two Deploy") {
-      deployPhase(env.PHASE_TWO_PCF_SPACE, env.PHASE_TWO_PCF_DOMAIN)
-    }
-    if(!params.SKIP_INTEGRATION_TESTS) {
+
+    if(params.DEPLOY_PHASE_TWO) {
+      stage("Phase Two Deploy") {
+        deployPhase(env.PHASE_TWO_PCF_SPACE, env.PHASE_TWO_PCF_DOMAIN)
+      }
+
+      if(!params.SKIP_INTEGRATION_TESTS) {
         stage("Phase Two Integration Tests") {
           integrationTestPhase(env.PHASE_TWO_PCF_SPACE, env.PHASE_TWO_PCF_DOMAIN)
         }
+      }
     }
 }
