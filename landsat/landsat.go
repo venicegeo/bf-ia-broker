@@ -35,7 +35,7 @@ func IsPreCollectionDataType(dataType string) bool {
 	return false
 }
 
-var collection1DataTypes = []string{"L1TP"}
+var collection1DataTypes = []string{"L1TP", "L1GT", "L1GS"}
 
 // IsCollection1DataType returns whether a data type is a "Collection 1" type
 // Reference: https://landsat.usgs.gov/landsat-processing-details
