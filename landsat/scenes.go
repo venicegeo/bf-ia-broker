@@ -123,20 +123,24 @@ func GetSceneFolderURL(sceneID string, dataType string) (folderURL string, fileP
 		return "", "", fmt.Errorf("Invalid scene ID: %s", sceneID)
 	}
 
-	if IsPreCollectionDataType(dataType) {
-		return formatPreCollectionIDToURL(sceneID), sceneID, nil
-	}
-	if !IsCollection1DataType(dataType) {
+	isPreC1 := IsPreCollectionDataType(dataType)
+	isC1 := IsCollection1DataType(dataType)
+	if !(isPreC1 || isC1) {
 		return "", "", errors.New("Unknown LandSat data type: " + dataType)
 	}
 
-	if !SceneMapIsReady {
-		return "", "", errors.New("Scene map is not ready yet")
-	}
-	record, ok := sceneMap[sceneID]
-	if !ok {
-		return "", "", errors.New("Scene not found with ID: " + sceneID)
+	if isC1 {
+		if !SceneMapIsReady {
+			return "", "", errors.New("Scene map is not ready yet")
+		}
+		if record, ok := sceneMap[sceneID]; ok {
+			return record.awsFolderURL, record.filePrefix, nil
+		}
 	}
 
-	return record.awsFolderURL, record.filePrefix, nil
+	if isPreC1 {
+		return formatPreCollectionIDToURL(sceneID), sceneID, nil
+	}
+
+	return "", "", fmt.Errorf("Scene not found with ID: %s, dataType: %s", sceneID, dataType)
 }

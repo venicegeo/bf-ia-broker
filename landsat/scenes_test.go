@@ -13,20 +13,25 @@ import (
 )
 
 const (
-	badLandSatID     = "X_NOT_LANDSAT_X"
-	goodLandSatID    = "LC8123456890"
-	missingLandSatID = "LC8123456000"
-	collection1ID    = "LONG_COLLECTION_1_ID"
-	l1tpLandSatURL   = "https://s3-us-west-2.fakeamazonaws.dummy/thisiscorrect/index.html"
-	l1tDataType      = "L1T"
-	l1gtDataType     = "L1GT"
-	l1tpDataType     = "L1TP"
-	badDataType      = "BOGUS"
+	badLandSatID               = "X_NOT_LANDSAT_X"
+	goodLandSatID1             = "LC81234567890"
+	goodLandSatID2             = "LC89876543210"
+	goodLandSatIDNotInSceneMap = "LC81029384756"
+	missingLandSatID           = "LC8123456000"
+	collection1ID1             = "LONG_COLLECTION_1_ID_1"
+	collection1ID2             = "LONG_COLLECTION_1_ID_2"
+	l1tpLandSatURL             = "https://s3-us-west-2.fakeamazonaws.dummy/thisiscorrect/index.html"
+	l1gtLandSatURL             = "https://s3-us-west-2.fakeamazonaws.dummy/thisisalsocorrect/index.html"
+	l1tDataType                = "L1T"
+	l1gtDataType               = "L1GT"
+	l1tpDataType               = "L1TP"
+	badDataType                = "BOGUS"
 )
 
-var sampleSceneMapCSV = []byte(collection1ID + "," + goodLandSatID +
-	",2017-04-11 05:36:29.349932,0.0,L1TP,149,39,29.22165,72.41205,31.34742,74.84666," +
-	l1tpLandSatURL)
+var sampleSceneMapCSV = []byte(
+	collection1ID1 + "," + goodLandSatID1 + ",2017-04-11 05:36:29.349932,0.0," + l1tpDataType + ",149,39,29.22165,72.41205,31.34742,74.84666," + l1tpLandSatURL + "\n" +
+		collection1ID2 + "," + goodLandSatID2 + ",2017-04-11 05:36:29.349932,0.0," + l1gtDataType + ",149,39,29.22165,72.41205,31.34742,74.84666," + l1gtLandSatURL + "\n",
+)
 
 type mockAWSHandler struct{}
 
@@ -49,7 +54,7 @@ func TestGetSceneFolderURL_BadIDs(t *testing.T) {
 	assert.NotNil(t, err, "Invalid LandSat ID did not cause an error")
 	assert.Contains(t, err.Error(), "Invalid scene ID")
 
-	_, _, err = GetSceneFolderURL(goodLandSatID, l1tpDataType)
+	_, _, err = GetSceneFolderURL(goodLandSatID1, l1tpDataType)
 	assert.NotNil(t, err, "Scene map not ready did not cause an error")
 	assert.Contains(t, err.Error(), "not ready")
 
@@ -61,28 +66,46 @@ func TestGetSceneFolderURL_BadIDs(t *testing.T) {
 
 func TestGetSceneFolderURL_BadDataType(t *testing.T) {
 	UpdateSceneMap(mockLogContext{})
-	_, _, err := GetSceneFolderURL(goodLandSatID, badDataType)
+	_, _, err := GetSceneFolderURL(goodLandSatID1, badDataType)
 	assert.NotNil(t, err, "Invalid scene data type did not cause an error")
 	assert.Contains(t, err.Error(), "Unknown LandSat data type")
 
-	_, _, err = GetSceneFolderURL(goodLandSatID, "")
+	_, _, err = GetSceneFolderURL(goodLandSatID1, "")
 	assert.NotNil(t, err, "Invalid scene data type did not cause an error")
 	assert.Contains(t, err.Error(), "Unknown LandSat data type")
 }
 
 func TestGetSceneFolderURL_L1TSceneID(t *testing.T) {
-	url, prefix, err := GetSceneFolderURL(goodLandSatID, l1tDataType)
+	url, prefix, err := GetSceneFolderURL(goodLandSatID1, l1tDataType)
 	assert.Nil(t, err, "%v", err)
-	assert.Equal(t, fmt.Sprintf(preCollectionLandSatAWSURL, "123", "456", goodLandSatID, ""), url)
-	assert.Equal(t, goodLandSatID, prefix)
+	assert.Equal(t, fmt.Sprintf(preCollectionLandSatAWSURL, "123", "456", goodLandSatID1, ""), url)
+	assert.Equal(t, goodLandSatID1, prefix)
 }
 
 func TestGetSceneFolderURL_L1TPSceneID(t *testing.T) {
 	UpdateSceneMap(mockLogContext{})
-	url, prefix, err := GetSceneFolderURL(goodLandSatID, l1tpDataType)
+	url, prefix, err := GetSceneFolderURL(goodLandSatID1, l1tpDataType)
 	assert.Nil(t, err, "%v", err)
 	assert.Equal(t, "https://s3-us-west-2.fakeamazonaws.dummy/thisiscorrect/", url)
-	assert.Equal(t, collection1ID, prefix)
+	assert.Equal(t, collection1ID1, prefix)
+}
+
+func TestGetSceneFolderURL_L1GTInSceneMap(t *testing.T) {
+	// NOTE: L1GT data type can mean both Collection-1 and pre-collection 1; this tests the former
+	UpdateSceneMap(mockLogContext{})
+	url, prefix, err := GetSceneFolderURL(goodLandSatID2, l1gtDataType)
+	assert.Nil(t, err, "%v", err)
+	assert.Equal(t, "https://s3-us-west-2.fakeamazonaws.dummy/thisisalsocorrect/", url)
+	assert.Equal(t, collection1ID2, prefix)
+}
+
+func TestGetSceneFolderURL_L1GTNotInSceneMap(t *testing.T) {
+	// NOTE: L1GT data type can mean both Collection-1 and pre-collection 1; this tests the latter
+	UpdateSceneMap(mockLogContext{})
+	url, prefix, err := GetSceneFolderURL(goodLandSatIDNotInSceneMap, l1gtDataType)
+	assert.Nil(t, err, "%v", err)
+	assert.Equal(t, fmt.Sprintf(preCollectionLandSatAWSURL, "102", "938", goodLandSatIDNotInSceneMap, ""), url)
+	assert.Equal(t, goodLandSatIDNotInSceneMap, prefix)
 }
 
 func TestUpdateSceneMapAsync_Success(t *testing.T) {
