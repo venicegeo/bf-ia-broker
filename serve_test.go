@@ -2,9 +2,11 @@ package main
 
 import (
 	"compress/gzip"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -62,4 +64,25 @@ func TestServe_SeedsLandSatC1Mappings(t *testing.T) {
 	<-time.NewTimer(1 * time.Second).C
 
 	assert.True(t, landsat.SceneMapIsReady, "LandSat scene map took more than 1 second to load")
+}
+
+func TestServe_BaseHealthCheckEndpoint(t *testing.T) {
+	success := make(chan bool)
+	launchServer = func(portStr string, router *mux.Router) { // Mock
+		req := httptest.NewRequest("GET", "/", strings.NewReader(""))
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, req)
+		responseBody, _ := ioutil.ReadAll(response.Result().Body)
+		success <- (string(responseBody) == "Hi")
+	}
+
+	timer := time.NewTimer(1 * time.Second)
+
+	go serve()
+
+	select {
+	case <-success:
+	case <-timer.C:
+		assert.Fail(t, "launchServer not called within 1 second of serve()")
+	}
 }
