@@ -96,4 +96,3 @@ In [handlers.go](planet/handlers.go) there are some REST handlers.
 |/planet/activate/{itemType}/{id}|POST|Activate a resource|
 
 See the Swagger docs or the source for details on using those handlers.
-
