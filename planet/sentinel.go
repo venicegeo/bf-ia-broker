@@ -5,10 +5,12 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/venicegeo/bf-ia-broker/util"
 )
 
-// Inputs: mgrs1, mgrs2, mgrs3, year, month, day, filename
-const sentinelAWSURL = "https://sentinel-s2-l1c.s3.amazonaws.com/tiles/%s/%s/%s/%d/%d/%d/0/%s"
+// Inputs: hostUrl, mgrs1, mgrs2, mgrs3, year, month, day, filename
+const sentinelAWSURL = "%s/tiles/%s/%s/%s/%d/%d/%d/0/%s"
 
 // https://earth.esa.int/web/sentinel/user-guides/sentinel-2-msi/naming-convention
 // TODO: add support for old-style product IDs (which do not contain MGRS info in them)
@@ -57,7 +59,7 @@ func addSentinelS3BandsToProperties(sentinelID string, properties *map[string]in
 
 	bands := map[string]string{}
 	for band, filename := range sentinelBandsFilenames {
-		bands[band] = fmt.Sprintf(sentinelAWSURL, m[3], m[4], m[5], year, month, day, filename)
+		bands[band] = fmt.Sprintf(sentinelAWSURL, util.GetSentinelHost(), m[3], m[4], m[5], year, month, day, filename)
 	}
 	(*properties)["bands"] = bands
 
