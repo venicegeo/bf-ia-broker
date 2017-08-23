@@ -11,5 +11,7 @@ applications:
     LD_LIBRARY_PATH: "/home/vcap/app/lib"
     PL_API_URL: "https://api.planet.com"
     BF_TIDE_PREDICTION_URL: "https://bf-tideprediction.int.geointservices.io/tides"
+    LANDSAT_HOST: "https://landsat-pds.s3.amazonaws.com"
+    SENTINEL_HOST: "https://sentinel-s2-l1c.s3.amazonaws.com"
     PL_DISABLE_PERMISSIONS_CHECK: "true"
 
