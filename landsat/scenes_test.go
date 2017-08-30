@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/venicegeo/bf-ia-broker/util"
 )
 
 const (
@@ -77,7 +78,7 @@ func TestGetSceneFolderURL_BadDataType(t *testing.T) {
 
 func TestGetSceneFolderURL_L1TSceneID(t *testing.T) {
 	url, prefix, err := GetSceneFolderURL(goodLandSatID1, l1tDataType)
-	host := os.Getenv("LANDSAT_HOST")
+	host := util.GetLandsatHost()
 	assert.Nil(t, err, "%v", err)
 	assert.Equal(t, fmt.Sprintf(preCollectionLandSatAWSURL, host, "123", "456", goodLandSatID1, ""), url)
 	assert.Equal(t, goodLandSatID1, prefix)
@@ -104,7 +105,7 @@ func TestGetSceneFolderURL_L1GTNotInSceneMap(t *testing.T) {
 	// NOTE: L1GT data type can mean both Collection-1 and pre-collection 1; this tests the latter
 	UpdateSceneMap(mockLogContext{})
 	url, prefix, err := GetSceneFolderURL(goodLandSatIDNotInSceneMap, l1gtDataType)
-	host := os.Getenv("LANDSAT_HOST")
+	host := util.GetLandsatHost()
 	assert.Nil(t, err, "%v", err)
 	assert.Equal(t, fmt.Sprintf(preCollectionLandSatAWSURL, host, "102", "938", goodLandSatIDNotInSceneMap, ""), url)
 	assert.Equal(t, goodLandSatIDNotInSceneMap, prefix)
