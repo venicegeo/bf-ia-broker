@@ -24,7 +24,7 @@ node {
               go version
             """
         }
-        if(!params.SKIP_INTEGRATION_TESTS) {
+/*        if(!params.SKIP_INTEGRATION_TESTS) {
             if(!fileExists("integration-tests")) {
                 sh "mkdir -p integration-tests"
             }
@@ -50,7 +50,7 @@ node {
                 }
             }
         }
-    }
+    }*/
     stage("Security Scan Pass/Fail") {
         // Query threadfix and block if any highs/crits are found
         /*sh "mkdir -p sspf-pkg"
@@ -199,6 +199,16 @@ node {
       }
     }*/
 
+
+    stage("Phase One Deploy") {
+      deployPhase(env.PHASE_ONE_PCF_SPACE, env.PHASE_ONE_PCF_DOMAIN)
+    }
+    //if(!params.SKIP_INTEGRATION_TESTS) {
+     //   stage("Phase One Integration Tests") {
+      //    integrationTestPhase(env.PHASE_ONE_PCF_SPACE, env.PHASE_ONE_PCF_DOMAIN)
+       // }
+    //}
+
 if(!params.SKIP_INTEGRATION_TESTS) {
         stage("Phase One Integration Tests") {
                         if(!fileExists("integration-tests")) {
@@ -208,8 +218,7 @@ if(!params.SKIP_INTEGRATION_TESTS) {
               file(credentialsId: "${POSTMAN_SECRET_FILE}", variable: "POSTMAN_FILE")
             ]) {
                 withEnv([
-                  "PATH+=${root}/integration-tests/node_modules/newman/bin:${nodejs}/bin",
-                  "PCF_SPACE=${env.PHASE_ONE_PCF_SPACE}",
+                  "PATH+=${nodejs}/bin",
                   "NPM_CONFIG_CACHE=${root}/.npmcache",
                   "HOME=${WORKSPACE}"
                 ]) {
@@ -229,17 +238,8 @@ if(!params.SKIP_INTEGRATION_TESTS) {
             }
         }
     }
-
-    stage("Phase One Deploy") {
-      deployPhase(env.PHASE_ONE_PCF_SPACE, env.PHASE_ONE_PCF_DOMAIN)
-    }
-    if(!params.SKIP_INTEGRATION_TESTS) {
-        stage("Phase One Integration Tests") {
-          integrationTestPhase(env.PHASE_ONE_PCF_SPACE, env.PHASE_ONE_PCF_DOMAIN)
-        }
-    }
-
-    if(params.DEPLOY_PHASE_TWO) {
+    
+if(params.DEPLOY_PHASE_TWO) {
       stage("Phase Two Deploy") {
         deployPhase(env.PHASE_TWO_PCF_SPACE, env.PHASE_TWO_PCF_DOMAIN)
       }
