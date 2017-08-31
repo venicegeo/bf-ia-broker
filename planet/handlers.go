@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -51,17 +50,8 @@ type DiscoverHandler struct {
 // NewDiscoverHandler creates a new handler using configuration
 // from environment variables
 func NewDiscoverHandler() DiscoverHandler {
-	planetBaseURL := os.Getenv("PL_API_URL")
-	if planetBaseURL == "" {
-		util.LogAlert(&util.BasicLogContext{}, "Didn't get Planet Labs API URL from the environment. Using default.")
-		planetBaseURL = "https://api.planet.com"
-	}
-
-	tidesURL := os.Getenv("BF_TIDE_PREDICTION_URL")
-	if tidesURL == "" {
-		util.LogAlert(&util.BasicLogContext{}, "Didn't get Tide Prediction URL from the environment. Using default.")
-		tidesURL = "https://bf-tideprediction.int.geointservices.io/tides"
-	}
+	planetBaseURL := util.GetPlanetLabsApiUrl()
+	tidesURL := util.GetTidesUrl()
 
 	return DiscoverHandler{
 		Context: Context{
@@ -183,17 +173,8 @@ type MetadataHandler struct {
 // NewMetadataHandler creates a new handler using configuration
 // from environment variables
 func NewMetadataHandler() MetadataHandler {
-	planetBaseURL := os.Getenv("PL_API_URL")
-	if planetBaseURL == "" {
-		util.LogAlert(&util.BasicLogContext{}, "Didn't get Planet Labs API URL from the environment. Using default.")
-		planetBaseURL = "https://api.planet.com"
-	}
-
-	tidesURL := os.Getenv("BF_TIDE_PREDICTION_URL")
-	if tidesURL == "" {
-		util.LogAlert(&util.BasicLogContext{}, "Didn't get Tide Prediction URL from the environment. Using default.")
-		tidesURL = "https://bf-tideprediction.int.geointservices.io/tides"
-	}
+	planetBaseURL := util.GetPlanetLabsApiUrl()
+	tidesURL := util.GetTidesUrl()
 
 	return MetadataHandler{
 		Context: Context{
@@ -305,17 +286,8 @@ type ActivateHandler struct {
 // NewActivateHandler creates a new handler using configuration
 // from environment variables
 func NewActivateHandler() ActivateHandler {
-	planetBaseURL := os.Getenv("PL_API_URL")
-	if planetBaseURL == "" {
-		util.LogAlert(&util.BasicLogContext{}, "Didn't get Planet Labs API URL from the environment. Using default.")
-		planetBaseURL = "https://api.planet.com"
-	}
-
-	tidesURL := os.Getenv("BF_TIDE_PREDICTION_URL")
-	if tidesURL == "" {
-		util.LogAlert(&util.BasicLogContext{}, "Didn't get Tide Prediction URL from the environment. Using default.")
-		tidesURL = "https://bf-tideprediction.int.geointservices.io/tides"
-	}
+	planetBaseURL := util.GetPlanetLabsApiUrl()
+	tidesURL := util.GetTidesUrl()
 
 	return ActivateHandler{
 		Context: Context{

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
 
@@ -18,7 +17,6 @@ type sceneMapRecord struct {
 	filePrefix   string
 }
 
-const defaultLandSatHost = "http://landsat-pds.s3.amazonaws.com"
 
 var sceneMap = map[string]sceneMapRecord{}
 
@@ -27,10 +25,7 @@ var SceneMapIsReady = false
 
 // UpdateSceneMap updates the global scene map from a remote source
 func UpdateSceneMap(ctx util.LogContext) (err error) {
-	landSatHost := os.Getenv("LANDSAT_HOST")
-	if landSatHost == "" {
-		landSatHost = defaultLandSatHost
-	}
+	landSatHost := util.GetLandsatHost()
 	sceneListURL := fmt.Sprintf("%s/c1/L8/scene_list.gz", landSatHost)
 
 	util.LogAudit(ctx, util.LogAuditInput{Actor: "anon user", Action: "GET", Actee: sceneListURL, Message: "Importing scene list", Severity: util.INFO})

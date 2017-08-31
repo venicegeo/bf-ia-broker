@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/venicegeo/bf-ia-broker/util"
 )
 
 // Old LandSat IDs come back in the form LC80060522017107LGN00
@@ -15,11 +17,11 @@ func IsValidLandSatID(sceneID string) bool {
 	return landSatSceneIDPattern.MatchString(sceneID)
 }
 
-const preCollectionLandSatAWSURL = "https://landsat-pds.s3.amazonaws.com/L8/%s/%s/%s/%s"
+const preCollectionLandSatAWSURL = "%s/L8/%s/%s/%s/%s"
 
 func formatPreCollectionIDToURL(sceneID string) string {
 	m := landSatSceneIDPattern.FindStringSubmatch(sceneID)[1:]
-	return fmt.Sprintf(preCollectionLandSatAWSURL, m[0], m[1], sceneID, "")
+	return fmt.Sprintf(preCollectionLandSatAWSURL, util.GetLandsatHost(), m[0], m[1], sceneID, "")
 }
 
 var preCollectionDataTypes = []string{"L1T", "L1GT", "L1G"}

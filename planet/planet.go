@@ -23,8 +23,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
-	"strconv"
 	"strings"
 
 	"github.com/venicegeo/bf-ia-broker/landsat"
@@ -36,7 +34,7 @@ import (
 var disablePermissionsCheck bool
 
 func init() {
-	disablePermissionsCheck, _ = strconv.ParseBool(os.Getenv("PL_DISABLE_PERMISSIONS_CHECK"))
+	disablePermissionsCheck, _ = util.IsPlanetPermissionsDisabled()
 	if disablePermissionsCheck {
 		util.LogInfo(&util.BasicLogContext{}, "Disabling Planet Labs permissions check")
 	}
