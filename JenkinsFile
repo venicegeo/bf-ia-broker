@@ -220,6 +220,7 @@ if(!params.SKIP_INTEGRATION_TESTS) {
                 withEnv([
                   "PATH+=${nodejs}/bin",
                   "NPM_CONFIG_CACHE=${root}/.npmcache",
+                  "PCF_SPACE=${env.PHASE_ONE_PCF_SPACE}",
                   "HOME=${WORKSPACE}"
                 ]) {
                     dir ("integration-tests") {
