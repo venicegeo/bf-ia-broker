@@ -15,11 +15,14 @@
 package util
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 )
 
-const LANDSAT_HOST  = "LANDSAT_HOST"
+const DOMAIN = "DOMAIN"
+
+const LANDSAT_HOST = "LANDSAT_HOST"
 const defaultLandSatHost = "https://landsat-pds.s3.amazonaws.com"
 
 const SENTINEL_HOST = "SENTINEL_HOST"
@@ -33,6 +36,13 @@ const defaultTidesUrl = "https://bf-tideprediction.int.geointservices.io/tides"
 
 const PL_DISABLE_PERMISSIONS_CHECK = "PL_DISABLE_PERMISSIONS_CHECK"
 
+func GetBeachfrontDomain() string {
+	domain := os.Getenv(DOMAIN)
+	if domain == "" {
+		LogAlert(&BasicLogContext{}, "Didn't get domain from environment.")
+	}
+	return domain
+}
 
 func GetLandsatHost() string {
 	landSatHost := os.Getenv(LANDSAT_HOST)
@@ -64,8 +74,14 @@ func GetPlanetLabsApiUrl() string {
 func GetTidesUrl() string {
 	tidesURL := os.Getenv(BF_TIDE_PREDICTION_URL)
 	if tidesURL == "" {
-		LogAlert(&BasicLogContext{}, "Didn't get Tide Prediction URL from the environment. Using default.")
-		tidesURL = defaultTidesUrl
+		LogInfo(&BasicLogContext{}, "Didn't get explicit Tide Prediction URL from the environment. Using implied URL based on domain.")
+		domain := GetBeachfrontDomain()
+		if domain != "" {
+			tidesURL = fmt.Sprintf("https://bf-tideprediction.%s/tides", domain)
+		} else {
+			LogAlert(&BasicLogContext{}, "No domain in environment. Using default tides URL: "+defaultTidesUrl)
+			tidesURL = defaultTidesUrl
+		}
 	}
 	return tidesURL
 }
