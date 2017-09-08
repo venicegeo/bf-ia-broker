@@ -131,6 +131,7 @@ node {
                 cf set-env ${fullAppName} DOMAIN ${pcfDomain}
                 cf set-env ${fullAppName} LANDSAT_HOST ${env.LANDSAT_HOST}
                 cf set-env ${fullAppName} SENTINEL_HOST ${env.SENTINEL_HOST}
+                cf set-env ${fullAppName} BF_TIDE_PREDICTION_URL ${env.BF_TIDE_PREDICTION_URL}
               """
               try {
                 sh "cf start ${fullAppName}"

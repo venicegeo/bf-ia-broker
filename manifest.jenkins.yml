@@ -10,6 +10,4 @@ applications:
   env:
     LD_LIBRARY_PATH: "/home/vcap/app/lib"
     PL_API_URL: "https://api.planet.com"
-    BF_TIDE_PREDICTION_URL: "https://bf-tideprediction.int.geointservices.io/tides"
     PL_DISABLE_PERMISSIONS_CHECK: "true"
-
