@@ -122,6 +122,7 @@ node {
           withCredentials([
             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${env.PCF_CREDS}", usernameVariable: "CFUSER", passwordVariable: "CFPASS"]
           ]) {
+			  def tidesUrl = "https://bf-tideprediction.${pcfDomain}/tides"
               sh """
                 cf api ${env.PCF_API_ENDPOINT}
                 cf auth ${CFUSER} ${CFPASS}
@@ -131,6 +132,7 @@ node {
                 cf set-env ${fullAppName} DOMAIN ${pcfDomain}
                 cf set-env ${fullAppName} LANDSAT_HOST ${env.LANDSAT_HOST}
                 cf set-env ${fullAppName} SENTINEL_HOST ${env.SENTINEL_HOST}
+				cf set-env ${fullAppName} BF_TIDE_PREDICTION_URL ${tidesUrl}
               """
               try {
                 sh "cf start ${fullAppName}"
