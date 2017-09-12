@@ -15,6 +15,7 @@
 package planet
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -140,6 +141,21 @@ func TestGetMetadataBadAssetID(t *testing.T) {
 	assert.NotNil(t, err, "Expected invalid ID asset to fail, but it succeeded.")
 	if _, ok := err.(util.HTTPErr); err != nil && !ok {
 		t.Errorf("Expected an HTTPErr, got a %T", err)
+	}
+}
+
+func TestGetAssetNoDataFromPlanet(t *testing.T) {
+	// Sometimes planet responds with a plain `{}` to a scene asset request
+	// This needs to be handled properly, returning a 404 error
+	planetServer, tidesServer, _ := createTestFixtures()
+	context := makeTestingContext(planetServer, tidesServer)
+
+	aOptions := MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "REOrthoTile"}
+	_, err := GetAsset(aOptions, &context)
+	if httpErr, ok := err.(util.HTTPErr); err != nil && !ok {
+		t.Errorf("Expected an HTTPErr, got a %T", err)
+	} else {
+		assert.Equal(t, http.StatusBadGateway, httpErr.Status, "Expected error 502 but got: %v", httpErr)
 	}
 }
 

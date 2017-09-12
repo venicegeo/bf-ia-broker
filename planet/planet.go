@@ -254,6 +254,17 @@ func GetAsset(options MetadataOptions, context *Context) (Asset, error) {
 		err = plErr.Log(context, "")
 		return result, err
 	}
+
+	if assets.Analytic.Type == "" {
+		plErr := util.Error{LogMsg: "Invalid data from Planet Labs asset request (analytic asset type is empty)",
+			SimpleMsg:  "Planet Labs returned invalid metadata for this scene's assets.",
+			Response:   string(body),
+			URL:        inputURL,
+			HTTPStatus: response.StatusCode}
+		err = plErr.Log(context, "")
+		return assets.Analytic, util.HTTPErr{Status: http.StatusBadGateway, Message: plErr.SimpleMsg}
+	}
+
 	return assets.Analytic, nil
 }
 
@@ -293,6 +304,7 @@ func GetMetadata(options MetadataOptions, context *Context) (*geojson.Feature, e
 		err = plErr.Log(context, "")
 		return nil, err
 	}
+
 	feature = *transformSRFeature(&feature, context)
 	if options.Tides {
 		var (

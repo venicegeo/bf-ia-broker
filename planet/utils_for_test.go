@@ -19,6 +19,7 @@ const testingValidKey = "VALID_KEY"
 const testingValidItemID = "foobar123"
 const testingValidSentinelID = "S2A_MSIL1C_20160513T183921_N0204_R070_T11SKD_20160513T185132"
 const testingValidItemType = "REOrthoTile"
+const testingValidSceneIDWithNoMetadata = "nometadata321"
 
 var testingSampleSearchResult string
 var testingSampleFeatureResult string
@@ -146,15 +147,22 @@ func createMockPlanetAPIServer() (server *httptest.Server) {
 		itemType := mux.Vars(request)["itemType"]
 		itemID := mux.Vars(request)["itemID"]
 
-		if itemType == "" || itemID != testingValidItemID {
+		validID := itemID == testingValidItemID || itemID == testingValidSceneIDWithNoMetadata
+
+		if itemType == "" || !validID {
 			writer.WriteHeader(404)
 			writer.Write([]byte("Not found"))
 			return
 		}
 
 		writer.WriteHeader(200)
-		result := strings.Replace(testingSampleAssetsResult, "++API_URL_PLACEHOLDER++", server.URL, -1)
-		writer.Write([]byte(result))
+
+		if itemID == testingValidSceneIDWithNoMetadata {
+			writer.Write([]byte("{}"))
+		} else {
+			result := strings.Replace(testingSampleAssetsResult, "++API_URL_PLACEHOLDER++", server.URL, -1)
+			writer.Write([]byte(result))
+		}
 	})
 
 	router.HandleFunc("/data/v1/assets/{assetID}/activate", func(writer http.ResponseWriter, request *http.Request) {
