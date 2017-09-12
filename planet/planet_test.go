@@ -150,13 +150,36 @@ func TestGetAssetNoDataFromPlanet(t *testing.T) {
 	planetServer, tidesServer, _ := createTestFixtures()
 	context := makeTestingContext(planetServer, tidesServer)
 
-	aOptions := MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "REOrthoTile"}
-	_, err := GetAsset(aOptions, &context)
+	var aOptions MetadataOptions
+	var err error
+
+	// Should 502 for RapidEye missing asset data
+	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "REOrthoTile"}
+	_, err = GetAsset(aOptions, &context)
 	if httpErr, ok := err.(util.HTTPErr); err != nil && !ok {
 		t.Errorf("Expected an HTTPErr, got a %T", err)
 	} else {
 		assert.Equal(t, http.StatusBadGateway, httpErr.Status, "Expected error 502 but got: %v", httpErr)
 	}
+
+	// Should 502 for PlanetScope missing asset data
+	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "PSOrthoTile"}
+	_, err = GetAsset(aOptions, &context)
+	if httpErr, ok := err.(util.HTTPErr); err != nil && !ok {
+		t.Errorf("Expected an HTTPErr, got a %T", err)
+	} else {
+		assert.Equal(t, http.StatusBadGateway, httpErr.Status, "Expected error 502 but got: %v", httpErr)
+	}
+
+	// Should NOT error for Landsat missing asset data (it's supposed to not have it)
+	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "Landsat8L1G"}
+	_, err = GetAsset(aOptions, &context)
+	assert.Nil(t, err, "Expected request to succeed; received: %v", err)
+
+	// Should NOT error for Sentinel missing asset data (it's supposed to not have it)
+	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "Sentinel2L1C"}
+	_, err = GetAsset(aOptions, &context)
+	assert.Nil(t, err, "Expected request to succeed; received: %v", err)
 }
 
 func TestGetMetadataBadKey(t *testing.T) {

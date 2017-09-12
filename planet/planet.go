@@ -255,7 +255,8 @@ func GetAsset(options MetadataOptions, context *Context) (Asset, error) {
 		return result, err
 	}
 
-	if assets.Analytic.Type == "" {
+	if assets.Analytic.Type == "" && (options.ItemType == "REOrthoTile" || options.ItemType == "PSOrthoTile") {
+		// RapidEye and PlanetScope scenes *must* have analytic asset data
 		plErr := util.Error{LogMsg: "Invalid data from Planet Labs asset request (analytic asset type is empty)",
 			SimpleMsg:  "Planet Labs returned invalid metadata for this scene's assets.",
 			Response:   string(body),
