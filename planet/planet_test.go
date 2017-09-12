@@ -146,7 +146,7 @@ func TestGetMetadataBadAssetID(t *testing.T) {
 
 func TestGetAssetNoDataFromPlanet(t *testing.T) {
 	// Sometimes planet responds with a plain `{}` to a scene asset request
-	// This needs to be handled properly, returning a 404 error
+	// This needs to be handled properly, returning a 502 error
 	planetServer, tidesServer, _ := createTestFixtures()
 	context := makeTestingContext(planetServer, tidesServer)
 
