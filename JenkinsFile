@@ -138,7 +138,7 @@ node {
                 sh "cf start ${fullAppName}"
                 } catch (Exception e) {
                   //sh "cf logs --recent ${appName}"
-                  sh "cf delete ${fullAppName} -f"
+                  sh "cf delete ${fullAppName} -f -r"
                   error("Error during application start. Deleting ${fullAppName} and failing the build.")
                 }
               }
@@ -173,7 +173,7 @@ node {
                   def legacyAppName = legacyApp.toString().trim()
                   if(legacyAppName != appName && legacyAppName != fullAppName) {
                       sh "cf unmap-route ${legacyAppName} ${pcfDomain} --hostname bf-ia-broker"
-                      sh "cf delete -f ${legacyAppName}"
+                      sh "cf delete -f ${legacyAppName} -r"
                   }
               }
           }
