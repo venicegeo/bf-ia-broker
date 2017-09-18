@@ -237,7 +237,7 @@ if(!params.SKIP_INTEGRATION_TESTS) {
                           mkdir -p ${root}/.npmcache
                           npm install newman@2
                         """
-                        sh "bin/bash ci/beachfront.sh"
+                        sh "/bin/bash ci/beachfront.sh"
                     }
                 }
             }
