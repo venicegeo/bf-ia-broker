@@ -237,7 +237,7 @@ if(!params.SKIP_INTEGRATION_TESTS) {
                           mkdir -p ${root}/.npmcache
                           npm install newman@2
                         """
-                        sh "sh ci/beachfront_integration_tests.sh"
+                        sh "bin/bash ci/beachfront.sh"
                     }
                 }
             }
@@ -268,7 +268,7 @@ if(params.DEPLOY_PHASE_TWO) {
 
                 ]) {
                     dir ("integration-tests") {
-                        sh "sh ci/beachfront_integration_tests_stage.sh"
+                        sh "/bin/bash ci/beachfront.sh"
                     }
                 }
             }
