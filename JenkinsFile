@@ -136,13 +136,13 @@ node {
               """
               try {
                 sh "cf start ${fullAppName}"
-                } catch (Exception e) {
-                  //sh "cf logs --recent ${appName}"
-                  sh "cf delete ${fullAppName} -f"
-                  error("Error during application start. Deleting ${fullAppName} and failing the build.")
-                }
+              } catch (Exception e) {
+                sh "cf logs --recent ${fullAppName}"
+                sh "cf delete ${fullAppName} -f"
+                error("Error during application start. Deleting ${fullAppName} and failing the build.")
               }
-            }
+          }
+        }
 		if(!params.SKIP_SCANS) {
 			  withCredentials([
 				[$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: "THREADFIX_KEY"]
