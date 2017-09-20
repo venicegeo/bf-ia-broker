@@ -173,7 +173,7 @@ node {
                   def legacyAppName = legacyApp.toString().trim()
                   if(legacyAppName != appName && legacyAppName != fullAppName) {
                       sh "cf unmap-route ${legacyAppName} ${pcfDomain} --hostname bf-ia-broker"
-                      sh "cf delete -f ${legacyAppName}"
+                      sh "cf delete -f ${legacyAppName} -r"
                   }
               }
           }
@@ -228,8 +228,8 @@ if(!params.SKIP_INTEGRATION_TESTS) {
                   "HOME=${WORKSPACE}"
                 ]) {
                     dir ("integration-tests") {
-                        if(env.GITLAB_CREDS) {
-                            git url: "${env.INTEGRATION_GIT_URL}", branch: "${env.INTEGRATION_GIT_BRANCH}", credentialsId: "${env.GITLAB_CREDS}"
+                        if(env.INTEGRATION_GITLAB_CREDS) {
+                            git url: "${env.INTEGRATION_GIT_URL}", branch: "${env.INTEGRATION_GIT_BRANCH}", credentialsId: "${env.INTEGRATION_GITLAB_CREDS}"
                         } else {
                             git url: "${env.INTEGRATION_GIT_URL}", branch: "${env.INTEGRATION_GIT_BRANCH}"
                         }
@@ -237,7 +237,7 @@ if(!params.SKIP_INTEGRATION_TESTS) {
                           mkdir -p ${root}/.npmcache
                           npm install newman@2
                         """
-                        sh "sh ci/beachfront_integration_tests.sh"
+                        sh "/bin/bash ci/beachfront.sh"
                     }
                 }
             }
@@ -268,7 +268,7 @@ if(params.DEPLOY_PHASE_TWO) {
 
                 ]) {
                     dir ("integration-tests") {
-                        sh "sh ci/beachfront_integration_tests_stage.sh"
+                        sh "/bin/bash ci/beachfront.sh"
                     }
                 }
             }
