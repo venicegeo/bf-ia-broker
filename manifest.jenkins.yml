@@ -4,7 +4,7 @@ applications:
   command: chmod 755 ./bf-ia-broker.bin && ./bf-ia-broker.bin serve
   buildpack: binary_buildpack
   memory: 256M
-  disk_quota: 256M
+  disk_quota: 512M
   instances: 1
   timeout: 180
   env:
