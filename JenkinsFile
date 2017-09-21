@@ -21,7 +21,7 @@ node {
 
   // Deploy and integration test function abstractions
 
-  def deployPhase = { String pcfSpace, String pcfDomain, String deployAppName,  ->
+  def deployPhase = { String pcfSpace, String pcfDomain, String deployAppName ->
     if(!fileExists('.cf')) {
       sh "mkdir -p .cf"
     }
@@ -72,7 +72,7 @@ node {
         // Remove legacy applications
         for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
           def legacyAppName = legacyApp.toString().trim()
-          if(legacyAppName != appName && legacyAppName != fullAppName) {
+          if(legacyAppName != appName && legacyAppName != deployAppName) {
             sh "cf unmap-route ${legacyAppName} ${pcfDomain} --hostname bf-ia-broker"
             sh "cf delete -f ${legacyAppName} -r"
           }
