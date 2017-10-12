@@ -33,14 +33,16 @@ node {
           cf auth ${CFUSER} ${CFPASS}
           cf target -o ${env.PCF_ORG} -s ${pcfSpace}
           cf push ${deployAppName} -f manifest.jenkins.yml --hostname ${deployAppName} -d ${pcfDomain} --no-start
-          cf set-env ${deployAppName} SPACE ${pcfSpace}
-          cf set-env ${deployAppName} DOMAIN ${pcfDomain}
-          cf set-env ${deployAppName} LANDSAT_HOST ${env.LANDSAT_HOST}
-          cf set-env ${deployAppName} SENTINEL_HOST ${env.SENTINEL_HOST}
-          cf set-env ${deployAppName} BF_TIDE_PREDICTION_URL ${tidesUrl}
-        """
-        try {
-          sh "cf start ${deployAppName}"
+		"""  
+		try {
+			sh """
+			  cf set-env ${deployAppName} SPACE ${pcfSpace}
+			  cf set-env ${deployAppName} DOMAIN ${pcfDomain}
+			  cf set-env ${deployAppName} LANDSAT_HOST ${env.LANDSAT_HOST}
+			  cf set-env ${deployAppName} SENTINEL_HOST ${env.SENTINEL_HOST}
+			  cf set-env ${deployAppName} BF_TIDE_PREDICTION_URL ${tidesUrl}
+			"""
+			sh "cf start ${deployAppName}"
         } catch (Exception e) {
           printLogsFailsafe deployAppName
           sh "cf delete ${deployAppName} -f"
