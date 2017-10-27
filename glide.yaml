@@ -5,6 +5,7 @@ import:
 - package: github.com/spf13/cobra
   version: 7aeaa2cce6ae7e18d2a6ee597b60ee137e999bd9
 - package: github.com/venicegeo/geojson-go
+  version: ceec07fbe640c2e3eb65f3563d62f5657bf75ea2
   subpackages:
   - geojson
 - package: github.com/stretchr/testify
