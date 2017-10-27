@@ -1,5 +1,5 @@
-hash: 5011649528d5f231fd5904ea1effe1bd038079a0c753003a8a3155e6dcddc0f5
-updated: 2017-04-18T17:07:17.046493021-04:00
+hash: bcf821f513bd6bbb37d3da769a530637580aef2165d25b9c689aa59c9b3dd879
+updated: 2017-10-26T21:51:00.192595626-04:00
 imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
@@ -10,13 +10,13 @@ imports:
 - name: github.com/spf13/cobra
   version: 7aeaa2cce6ae7e18d2a6ee597b60ee137e999bd9
 - name: github.com/spf13/pflag
-  version: 9a906f17374922ed0f74e1b2f593d3723f2ffb00
+  version: 97afa5e7ca8a08a383cb259e06636b5e2cc7897f
 - name: github.com/stretchr/testify
   version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
   - assert
 - name: github.com/venicegeo/geojson-go
-  version: 6e163c1e0f7948355597c7782b34aa7241d1d09f
+  version: ceec07fbe640c2e3eb65f3563d62f5657bf75ea2
   subpackages:
   - geojson
 testImports:
