@@ -39,6 +39,7 @@ node {
 			  cf set-env ${deployAppName} SPACE ${pcfSpace}
 			  cf set-env ${deployAppName} DOMAIN ${pcfDomain}
 			  cf set-env ${deployAppName} LANDSAT_HOST ${env.LANDSAT_HOST}
+			  cf set-env ${deployAppName} PL_API_URL ${env.PL_API_URL}
 			  cf set-env ${deployAppName} SENTINEL_HOST ${env.SENTINEL_HOST}
 			  cf set-env ${deployAppName} BF_TIDE_PREDICTION_URL ${tidesUrl}
 			"""
