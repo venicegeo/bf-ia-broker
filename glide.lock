@@ -1,5 +1,5 @@
-hash: 5011649528d5f231fd5904ea1effe1bd038079a0c753003a8a3155e6dcddc0f5
-updated: 2017-04-18T17:07:17.046493021-04:00
+hash: bdf6af0e7d4dd6b822e885699504e5d49c5e27e92c48127164eb08ffd5babd69
+updated: 2017-10-27T10:53:15.060578884-04:00
 imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
@@ -16,7 +16,7 @@ imports:
   subpackages:
   - assert
 - name: github.com/venicegeo/geojson-go
-  version: 6e163c1e0f7948355597c7782b34aa7241d1d09f
+  version: ceec07fbe640c2e3eb65f3563d62f5657bf75ea2
   subpackages:
   - geojson
 testImports:
