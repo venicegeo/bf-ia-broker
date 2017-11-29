@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func TestGenYamlDoc(t *testing.T) {
+func TestGenRSTDoc(t *testing.T) {
 	c := initializeWithRootCmd()
 	// Need two commands to run the command alphabetical sort
 	cmdEcho.AddCommand(cmdTimes, cmdEchoSub, cmdDeprecated)
@@ -21,7 +21,7 @@ func TestGenYamlDoc(t *testing.T) {
 	out := new(bytes.Buffer)
 
 	// We generate on s subcommand so we have both subcommands and parents
-	if err := GenYaml(cmdEcho, out); err != nil {
+	if err := GenReST(cmdEcho, out); err != nil {
 		t.Fatal(err)
 	}
 	found := out.String()
@@ -68,7 +68,7 @@ func TestGenYamlDoc(t *testing.T) {
 	}
 }
 
-func TestGenYamlNoTag(t *testing.T) {
+func TestGenRSTNoTag(t *testing.T) {
 	c := initializeWithRootCmd()
 	// Need two commands to run the command alphabetical sort
 	cmdEcho.AddCommand(cmdTimes, cmdEchoSub, cmdDeprecated)
@@ -77,7 +77,7 @@ func TestGenYamlNoTag(t *testing.T) {
 	cmdRootWithRun.PersistentFlags().StringVarP(&flags2a, "rootflag", "r", "two", strtwoParentHelp)
 	out := new(bytes.Buffer)
 
-	if err := GenYaml(c, out); err != nil {
+	if err := GenReST(c, out); err != nil {
 		t.Fatal(err)
 	}
 	found := out.String()
@@ -87,27 +87,26 @@ func TestGenYamlNoTag(t *testing.T) {
 
 }
 
-func TestGenYamlTree(t *testing.T) {
+func TestGenRSTTree(t *testing.T) {
 	cmd := &cobra.Command{
 		Use: "do [OPTIONS] arg1 arg2",
 	}
-
-	tmpdir, err := ioutil.TempDir("", "test-gen-yaml-tree")
+	tmpdir, err := ioutil.TempDir("", "test-gen-rst-tree")
 	if err != nil {
 		t.Fatalf("Failed to create tmpdir: %s", err.Error())
 	}
 	defer os.RemoveAll(tmpdir)
 
-	if err := GenYamlTree(cmd, tmpdir); err != nil {
-		t.Fatalf("GenYamlTree failed: %s", err.Error())
+	if err := GenReSTTree(cmd, tmpdir); err != nil {
+		t.Fatalf("GenReSTTree failed: %s", err.Error())
 	}
 
-	if _, err := os.Stat(filepath.Join(tmpdir, "do.yaml")); err != nil {
-		t.Fatalf("Expected file 'do.yaml' to exist")
+	if _, err := os.Stat(filepath.Join(tmpdir, "do.rst")); err != nil {
+		t.Fatalf("Expected file 'do.rst' to exist")
 	}
 }
 
-func BenchmarkGenYamlToFile(b *testing.B) {
+func BenchmarkGenReSTToFile(b *testing.B) {
 	c := initializeWithRootCmd()
 	file, err := ioutil.TempFile("", "")
 	if err != nil {
@@ -118,7 +117,7 @@ func BenchmarkGenYamlToFile(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := GenYaml(c, file); err != nil {
+		if err := GenReST(c, file); err != nil {
 			b.Fatal(err)
 		}
 	}

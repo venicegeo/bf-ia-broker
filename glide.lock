@@ -1,5 +1,5 @@
-hash: 5011649528d5f231fd5904ea1effe1bd038079a0c753003a8a3155e6dcddc0f5
-updated: 2017-04-18T17:07:17.046493021-04:00
+hash: 836befbb1c3a8ecde08370daeeae9aae3fd60df25249df837e7bf3a12ad9cc8e
+updated: 2017-10-27T11:09:44.354255281-04:00
 imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
@@ -8,7 +8,7 @@ imports:
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/spf13/cobra
-  version: 7aeaa2cce6ae7e18d2a6ee597b60ee137e999bd9
+  version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
 - name: github.com/spf13/pflag
   version: 9a906f17374922ed0f74e1b2f593d3723f2ffb00
 - name: github.com/stretchr/testify
@@ -16,7 +16,7 @@ imports:
   subpackages:
   - assert
 - name: github.com/venicegeo/geojson-go
-  version: 6e163c1e0f7948355597c7782b34aa7241d1d09f
+  version: ceec07fbe640c2e3eb65f3563d62f5657bf75ea2
   subpackages:
   - geojson
 testImports:
