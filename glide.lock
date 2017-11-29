@@ -1,5 +1,5 @@
 hash: bdf6af0e7d4dd6b822e885699504e5d49c5e27e92c48127164eb08ffd5babd69
-updated: 2017-10-27T10:53:15.060578884-04:00
+updated: 2017-11-29T11:45:18.760935326-05:00
 imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
@@ -10,7 +10,7 @@ imports:
 - name: github.com/spf13/cobra
   version: 7aeaa2cce6ae7e18d2a6ee597b60ee137e999bd9
 - name: github.com/spf13/pflag
-  version: 9a906f17374922ed0f74e1b2f593d3723f2ffb00
+  version: 4c012f6dcd9546820e378d0bdda4d8fc772cdfea
 - name: github.com/stretchr/testify
   version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
