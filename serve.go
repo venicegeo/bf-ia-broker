@@ -53,7 +53,9 @@ func serve() {
 	// 	}
 	// })
 
-	go landsat.UpdateSceneMapOnTicker(30*time.Minute, context)
+	if util.GetLandsatHost() != "" {
+		go landsat.UpdateSceneMapOnTicker(30*time.Minute, context)
+	}
 	launchServer(portStr, router)
 }
 
