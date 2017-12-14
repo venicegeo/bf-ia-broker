@@ -23,13 +23,10 @@ import (
 const DOMAIN = "DOMAIN"
 
 const LANDSAT_HOST = "LANDSAT_HOST"
-const defaultLandSatHost = "https://landsat-pds.s3.amazonaws.com"
 
 const SENTINEL_HOST = "SENTINEL_HOST"
-const defaultSentinelHost = "https://sentinel-s2-l1c.s3.amazonaws.com"
 
 const PL_API_URL = "PL_API_URL"
-const defaultPlApiUrl = "https://api.planet.com"
 
 const BF_TIDE_PREDICTION_URL = "BF_TIDE_PREDICTION_URL"
 const defaultTidesUrl = "https://bf-tideprediction.int.geointservices.io/tides"
@@ -38,7 +35,7 @@ const PL_DISABLE_PERMISSIONS_CHECK = "PL_DISABLE_PERMISSIONS_CHECK"
 
 func GetBeachfrontDomain() string {
 	domain := os.Getenv(DOMAIN)
-	if domain == "" {
+	if len(domain) == 0 {
 		LogAlert(&BasicLogContext{}, "Didn't get domain from environment.")
 	}
 	return domain
@@ -46,34 +43,31 @@ func GetBeachfrontDomain() string {
 
 func GetLandsatHost() string {
 	landSatHost := os.Getenv(LANDSAT_HOST)
-	if landSatHost == "" {
-		LogAlert(&BasicLogContext{}, "Didn't get Landsat Host URL from the environment. Using default.")
-		landSatHost = defaultLandSatHost
+	if len(landSatHost) == 0 {
+		LogAlert(&BasicLogContext{}, "Did not get Landsat Host URL from the environment. Landsat will not be available.")
 	}
 	return landSatHost
 }
 
 func GetSentinelHost() string {
 	sentinelHost := os.Getenv(SENTINEL_HOST)
-	if sentinelHost == "" {
-		LogAlert(&BasicLogContext{}, "Didn't get Sentinel Host URL from the environment. Using default.")
-		sentinelHost = defaultSentinelHost
+	if len(sentinelHost) == 0 {
+		LogAlert(&BasicLogContext{}, "Didn't get Sentinel Host URL from the environment. Sentinel will not be available.")
 	}
 	return sentinelHost
 }
 
 func GetPlanetLabsApiUrl() string {
 	planetBaseURL := os.Getenv(PL_API_URL)
-	if planetBaseURL == "" {
-		LogAlert(&BasicLogContext{}, "Didn't get Planet Labs API URL from the environment. Using default.")
-		planetBaseURL = defaultPlApiUrl
+	if len(planetBaseURL) == 0 {
+		LogAlert(&BasicLogContext{}, "Didn't get Planet API URL from the environment. Planet API will not be available.")
 	}
 	return planetBaseURL
 }
 
 func GetTidesUrl() string {
 	tidesURL := os.Getenv(BF_TIDE_PREDICTION_URL)
-	if tidesURL == "" {
+	if len(tidesURL) == 0 {
 		LogInfo(&BasicLogContext{}, "Didn't get explicit Tide Prediction URL from the environment. Using implied URL based on domain.")
 		domain := GetBeachfrontDomain()
 		if domain != "" {
