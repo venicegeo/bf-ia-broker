@@ -50,8 +50,8 @@ type DiscoverHandler struct {
 // NewDiscoverHandler creates a new handler using configuration
 // from environment variables
 func NewDiscoverHandler() DiscoverHandler {
-	planetBaseURL := util.GetPlanetLabsApiUrl()
-	tidesURL := util.GetTidesUrl()
+	planetBaseURL := util.GetPlanetAPIURL()
+	tidesURL := util.GetTidesURL()
 
 	return DiscoverHandler{
 		Context: Context{
@@ -173,8 +173,8 @@ type MetadataHandler struct {
 // NewMetadataHandler creates a new handler using configuration
 // from environment variables
 func NewMetadataHandler() MetadataHandler {
-	planetBaseURL := util.GetPlanetLabsApiUrl()
-	tidesURL := util.GetTidesUrl()
+	planetBaseURL := util.GetPlanetAPIURL()
+	tidesURL := util.GetTidesURL()
 
 	return MetadataHandler{
 		Context: Context{
@@ -286,8 +286,8 @@ type ActivateHandler struct {
 // NewActivateHandler creates a new handler using configuration
 // from environment variables
 func NewActivateHandler() ActivateHandler {
-	planetBaseURL := util.GetPlanetLabsApiUrl()
-	tidesURL := util.GetTidesUrl()
+	planetBaseURL := util.GetPlanetAPIURL()
+	tidesURL := util.GetTidesURL()
 
 	return ActivateHandler{
 		Context: Context{
