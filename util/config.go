@@ -20,72 +20,73 @@ import (
 	"strconv"
 )
 
-const DOMAIN = "DOMAIN"
+// Environment variables
+const (
+	DOMAIN                       = "DOMAIN"
+	LANDSAT_HOST                 = "LANDSAT_HOST"
+	SENTINEL_HOST                = "SENTINEL_HOST"
+	PL_API_URL                   = "PL_API_URL"
+	BF_TIDE_PREDICTION_URL       = "BF_TIDE_PREDICTION_URL"
+	PL_DISABLE_PERMISSIONS_CHECK = "PL_DISABLE_PERMISSIONS_CHECK"
+)
 
-const LANDSAT_HOST = "LANDSAT_HOST"
-const defaultLandSatHost = "https://landsat-pds.s3.amazonaws.com"
+const defaultTidesURL = "https://bf-tideprediction.int.geointservices.io/tides"
 
-const SENTINEL_HOST = "SENTINEL_HOST"
-const defaultSentinelHost = "https://sentinel-s2-l1c.s3.amazonaws.com"
-
-const PL_API_URL = "PL_API_URL"
-const defaultPlApiUrl = "https://api.planet.com"
-
-const BF_TIDE_PREDICTION_URL = "BF_TIDE_PREDICTION_URL"
-const defaultTidesUrl = "https://bf-tideprediction.int.geointservices.io/tides"
-
-const PL_DISABLE_PERMISSIONS_CHECK = "PL_DISABLE_PERMISSIONS_CHECK"
-
+// GetBeachfrontDomain returns a string for the DOMAIN environment variable
 func GetBeachfrontDomain() string {
-	domain := os.Getenv(DOMAIN)
-	if domain == "" {
+	domain, ok := os.LookupEnv(DOMAIN)
+	if !ok {
 		LogAlert(&BasicLogContext{}, "Didn't get domain from environment.")
 	}
 	return domain
 }
 
+// GetLandsatHost returns a string for the LANDSAT_HOST environment variable
 func GetLandsatHost() string {
-	landSatHost := os.Getenv(LANDSAT_HOST)
-	if landSatHost == "" {
-		LogAlert(&BasicLogContext{}, "Didn't get Landsat Host URL from the environment. Using default.")
-		landSatHost = defaultLandSatHost
+	landSatHost, ok := os.LookupEnv(LANDSAT_HOST)
+	if !ok {
+		LogAlert(&BasicLogContext{}, "Did not get Landsat Host URL from the environment. Landsat will not be available.")
 	}
 	return landSatHost
 }
 
+// GetSentinelHost returns a string for the SENTINEL_HOST environment variable
 func GetSentinelHost() string {
-	sentinelHost := os.Getenv(SENTINEL_HOST)
-	if sentinelHost == "" {
-		LogAlert(&BasicLogContext{}, "Didn't get Sentinel Host URL from the environment. Using default.")
-		sentinelHost = defaultSentinelHost
+	sentinelHost, ok := os.LookupEnv(SENTINEL_HOST)
+	if !ok {
+		LogAlert(&BasicLogContext{}, "Did not get Sentinel Host URL from the environment. Sentinel will not be available.")
 	}
 	return sentinelHost
 }
 
-func GetPlanetLabsApiUrl() string {
-	planetBaseURL := os.Getenv(PL_API_URL)
-	if planetBaseURL == "" {
-		LogAlert(&BasicLogContext{}, "Didn't get Planet Labs API URL from the environment. Using default.")
-		planetBaseURL = defaultPlApiUrl
+// GetPlanetAPIURL returns a string for the PL_API_URL environment variable
+func GetPlanetAPIURL() string {
+	planetBaseURL, ok := os.LookupEnv(PL_API_URL)
+	if !ok {
+		LogAlert(&BasicLogContext{}, "Did not get Planet API URL from the environment. Planet API will not be available.")
 	}
 	return planetBaseURL
 }
 
-func GetTidesUrl() string {
-	tidesURL := os.Getenv(BF_TIDE_PREDICTION_URL)
-	if tidesURL == "" {
-		LogInfo(&BasicLogContext{}, "Didn't get explicit Tide Prediction URL from the environment. Using implied URL based on domain.")
+// GetTidesURL returns a string for the BF_TIDE_PREDICTION_URL
+// environment variable or generates one if needed
+func GetTidesURL() string {
+	tidesURL, ok := os.LookupEnv(BF_TIDE_PREDICTION_URL)
+	if !ok {
+		LogInfo(&BasicLogContext{}, "Did not get explicit Tide Prediction URL from the environment. Using implied URL based on domain.")
 		domain := GetBeachfrontDomain()
-		if domain != "" {
-			tidesURL = fmt.Sprintf("https://bf-tideprediction.%s/tides", domain)
+		if len(domain) == 0 {
+			LogAlert(&BasicLogContext{}, "No domain in environment. Using default tides URL: "+defaultTidesURL)
+			tidesURL = defaultTidesURL
 		} else {
-			LogAlert(&BasicLogContext{}, "No domain in environment. Using default tides URL: "+defaultTidesUrl)
-			tidesURL = defaultTidesUrl
+			tidesURL = fmt.Sprintf("https://bf-tideprediction.%s/tides", domain)
 		}
 	}
 	return tidesURL
 }
 
+// IsPlanetPermissionsDisabled returns true if the
+// PL_DISABLE_PERMISSIONS_CHECK is true
 func IsPlanetPermissionsDisabled() (bool, error) {
 	return strconv.ParseBool(os.Getenv(PL_DISABLE_PERMISSIONS_CHECK))
 }

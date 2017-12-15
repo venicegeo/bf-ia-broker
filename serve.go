@@ -53,7 +53,11 @@ func serve() {
 	// 	}
 	// })
 
-	go landsat.UpdateSceneMapOnTicker(30*time.Minute, context)
+	if len(util.GetLandsatHost()) != 0 {
+		go landsat.UpdateSceneMapOnTicker(30*time.Minute, context)
+	} else {
+		util.LogAlert(context, "No Landsat host found, not starting Landsat scene list query loop")
+	}
 	launchServer(portStr, router)
 }
 

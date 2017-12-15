@@ -9,5 +9,4 @@ applications:
   timeout: 180
   env:
     LD_LIBRARY_PATH: "/home/vcap/app/lib"
-    PL_API_URL: "https://api.planet.com"
     PL_DISABLE_PERMISSIONS_CHECK: "true"

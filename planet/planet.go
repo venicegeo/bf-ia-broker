@@ -185,17 +185,17 @@ func GetScenes(options SearchOptions, context *Context) (*geojson.FeatureCollect
 		return nil, err
 	}
 	if response, err = doRequest(doRequestInput{method: "POST", inputURL: "data/v1/quick-search", body: requestBody, contentType: "application/json"}, context); err != nil {
-		err = util.LogSimpleErr(context, fmt.Sprintf("Failed to complete Planet Labs request %#v.", requestBody), err)
+		err = util.LogSimpleErr(context, fmt.Sprintf("Failed to complete Planet API request %#v.", string(requestBody)), err)
 		return nil, err
 	}
 	switch {
 	case (response.StatusCode >= 400) && (response.StatusCode < 500):
-		message := fmt.Sprintf("Failed to discover scenes from Planet Labs: %v. ", response.Status)
+		message := fmt.Sprintf("Failed to discover scenes from Planet API: %v. ", response.Status)
 		err := util.HTTPErr{Status: response.StatusCode, Message: message}
 		util.LogAlert(context, message)
 		return nil, err
 	case response.StatusCode >= 500:
-		err = util.LogSimpleErr(context, "Failed to discover scenes from Planet Labs.", errors.New(response.Status))
+		err = util.LogSimpleErr(context, "Failed to discover scenes from Planet API.", errors.New(response.Status))
 		return nil, err
 	default:
 		//no op
@@ -246,7 +246,7 @@ func GetAsset(options MetadataOptions, context *Context) (Asset, error) {
 	defer response.Body.Close()
 	body, _ = ioutil.ReadAll(response.Body)
 	if err = json.Unmarshal(body, &assets); err != nil {
-		plErr := util.Error{LogMsg: "Failed to Unmarshal response from Planet Labs data request: " + err.Error(),
+		plErr := util.Error{LogMsg: "Failed to Unmarshal response from Planet API data request: " + err.Error(),
 			SimpleMsg:  "Planet Labs returned an unexpected response for this request. See log for further details.",
 			Response:   string(body),
 			URL:        inputURL,
@@ -257,7 +257,7 @@ func GetAsset(options MetadataOptions, context *Context) (Asset, error) {
 
 	if assets.Analytic.Type == "" && (options.ItemType == "REOrthoTile" || options.ItemType == "PSOrthoTile") {
 		// RapidEye and PlanetScope scenes *must* have analytic asset data
-		plErr := util.Error{LogMsg: "Invalid data from Planet Labs asset request (analytic asset type is empty)",
+		plErr := util.Error{LogMsg: "Invalid data from Planet API asset request (analytic asset type is empty)",
 			SimpleMsg:  "Planet Labs returned invalid metadata for this scene's assets.",
 			Response:   string(body),
 			URL:        inputURL,
@@ -297,7 +297,7 @@ func GetMetadata(options MetadataOptions, context *Context) (*geojson.Feature, e
 		//no op
 	}
 	if err = json.Unmarshal(body, &feature); err != nil {
-		plErr := util.Error{LogMsg: "Failed to Unmarshal response from Planet Labs data request: " + err.Error(),
+		plErr := util.Error{LogMsg: "Failed to Unmarshal response from Planet API data request: " + err.Error(),
 			SimpleMsg:  "Planet Labs returned an unexpected response for this request. See log for further details.",
 			Response:   string(body),
 			URL:        inputURL,
@@ -370,7 +370,7 @@ func doRequest(input doRequestInput, context *Context) (*http.Response, error) {
 	request.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(context.PlanetKey+":")))
 	message = fmt.Sprintf("%v\nHeader:\n%#v", message, request.Header)
 	util.LogAudit(context, util.LogAuditInput{Actor: "planet/doRequest", Action: input.method, Actee: inputURL, Message: message, Severity: util.INFO})
-	util.LogAudit(context, util.LogAuditInput{Actor: inputURL, Action: input.method + " response", Actee: "planet/doRequest", Message: "Receiving data from Planet Labs", Severity: util.INFO})
+	util.LogAudit(context, util.LogAuditInput{Actor: inputURL, Action: input.method + " response", Actee: "planet/doRequest", Message: "Receiving data from Planet API", Severity: util.INFO})
 	return util.HTTPClient().Do(request)
 }
 
