@@ -5,6 +5,7 @@ node {
   def mvn = tool 'M3'
   def appvers = "${env.PROMOTE_VERSION}"
   def appBaseName = "bf-ia-broker"
+  def tidesUrl = "https://bf-tideprediction.${PROMOTE_DOMAIN}/tides"
   def appName
 
   if(!fileExists('.cf')) {
@@ -64,6 +65,11 @@ node {
     try {
         sh "cf set-env ${appName} SPACE ${env.PROMOTE_SPACE}"
         sh "cf set-env ${appName} DOMAIN ${env.PROMOTE_DOMAIN}"
+        sh "cf set-env ${appName} LANDSAT_HOST ${env.LANDSAT_HOST}"
+        sh "cf set-env ${appName} PL_API_URL ${env.PL_API_URL}"
+        sh "cf set-env ${appName} SENTINEL_HOST ${env.SENTINEL_HOST}"
+        sh "cf set-env ${appName} BF_TIDE_PREDICTION_URL ${tidesUrl}"
+        */
         sh "cf start ${appName}"
       } catch (Exception e) {
         try {
