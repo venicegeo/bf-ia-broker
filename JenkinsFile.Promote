@@ -69,7 +69,6 @@ node {
         sh "cf set-env ${appName} PL_API_URL ${env.PL_API_URL}"
         sh "cf set-env ${appName} SENTINEL_HOST ${env.SENTINEL_HOST}"
         sh "cf set-env ${appName} BF_TIDE_PREDICTION_URL ${tidesUrl}"
-        */
         sh "cf start ${appName}"
       } catch (Exception e) {
         try {
