@@ -138,7 +138,7 @@ node {
 
 
   stage("Archive") {
-    def archiveName = "${appName}.tgz"
+    def archiveName = "${appName}.tar.gz"
     withEnv([
       "PATH+=${golangTool}/bin:${root}/gopath/bin",
       "GOROOT=${golangTool}",
