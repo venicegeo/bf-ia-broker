@@ -31,17 +31,18 @@ const sentinelAWSURL = "%s/tiles/%s/%s/%s/%d/%d/%d/0/%s"
 var sentinelIDPattern = regexp.MustCompile("S2(A|B)_MSIL1C_([0-9]{4})([0-9]{2})([0-9]{2})T[0-9]+_[A-Z0-9]+_[A-Z0-9]+_T([0-9]+)([A-Z])([A-Z]+)_[0-9]{8}T[0-9]")
 
 var sentinelBandsFilenames = map[string]string{
-	"coastal":      "B01.jp2",
-	"blue":         "B02.jp2",
-	"green":        "B03.jp2",
-	"red":          "B04.jp2",
-	"nir":          "B05.jp2",
-	"swir1":        "B06.jp2",
-	"swir2":        "B07.jp2",
-	"panchromatic": "B08.jp2",
-	"cirrus":       "B09.jp2",
-	"tirs1":        "B10.jp2",
-	"tirs2":        "B11.jp2",
+       "coastal":      "B01.jp2",
+        "blue":         "B02.jp2",
+        "green":        "B03.jp2",
+        "red":          "B04.jp2",
+        "rededge1":     "B05.jp2",
+        "rededge2":     "B06.jp2",
+        "rededge3":     "B07.jp2",
+        "nir":          "B08.jp2",
+        "watervapor":   "B09.jp2",
+        "cirrus":       "B10.jp2",
+        "swir1":        "B11.jp2",
+        "swir2":        "B12.jp2",
 }
 
 func isSentinelFeature(productID string) bool {
