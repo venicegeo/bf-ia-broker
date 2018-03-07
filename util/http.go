@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"time"
 )
 
 var httpClient *http.Client
@@ -41,7 +42,10 @@ func (err HTTPErr) Error() string {
 func HTTPClient() *http.Client {
 	if httpClient == nil {
 		transport := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+			IdleConnTimeout:     90 * time.Second,
+			MaxIdleConns:        10,
+			MaxIdleConnsPerHost: 2,
 		}
 
 		httpClient = &http.Client{Transport: transport}
