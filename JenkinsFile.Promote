@@ -14,7 +14,7 @@ node {
     def configFile = "${root}/config.json"
     dir(configDir) {
       git url: "${env.CONFIGURATION_URL}", credentialsId: "${env.CONFIGURATION_CREDS}"
-      sh "mv ${configDir}/${ENVIRONMENT}-config.json ${configFile}"
+      sh "mv ${configDir}/${env.ENVIRONMENT}-config.json ${configFile}"
       deleteDir()
     }
     // read the current configuration
@@ -43,7 +43,7 @@ node {
 
   stage('Pull Artifact') {
     authenticatePcf()
-    if (appvers == "") {
+    if (appvers == "latest") {
       // Get the latest version from Phase 2
       echo "No version specified. Fetching the latest version from ${env.PHASE_TWO_PCF_SPACE}"
       sh "cf target -o ${env.PCF_ORG} -s ${env.PHASE_TWO_PCF_SPACE}"
