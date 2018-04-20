@@ -57,12 +57,12 @@ func TestMain(m *testing.M) {
 
 func TestServe_CallsLaunchServer(t *testing.T) {
 	success := make(chan bool)
-	launchServer = func(portStr string, router *mux.Router) { // Mock
+	launchServerFunc = func(portStr string, router *mux.Router) { // Mock
 		success <- true
 	}
 	timer := time.NewTimer(1 * time.Second)
 
-	go serve()
+	go serveAction(nil)
 
 	select {
 	case <-success:
@@ -72,9 +72,9 @@ func TestServe_CallsLaunchServer(t *testing.T) {
 }
 
 func TestServe_SeedsLandSatC1Mappings(t *testing.T) {
-	launchServer = func(portStr string, router *mux.Router) {} // Mock
+	launchServerFunc = func(portStr string, router *mux.Router) {} // Mock
 
-	go serve()
+	go serveAction(nil)
 	<-time.NewTimer(1 * time.Second).C
 
 	assert.True(t, landsat.SceneMapIsReady, "LandSat scene map took more than 1 second to load")
@@ -82,7 +82,7 @@ func TestServe_SeedsLandSatC1Mappings(t *testing.T) {
 
 func TestServe_BaseHealthCheckEndpoint(t *testing.T) {
 	success := make(chan bool)
-	launchServer = func(portStr string, router *mux.Router) { // Mock
+	launchServerFunc = func(portStr string, router *mux.Router) { // Mock
 		req := httptest.NewRequest("GET", "/", strings.NewReader(""))
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, req)
@@ -92,7 +92,7 @@ func TestServe_BaseHealthCheckEndpoint(t *testing.T) {
 
 	timer := time.NewTimer(1 * time.Second)
 
-	go serve()
+	go serveAction(nil)
 
 	select {
 	case <-success:
