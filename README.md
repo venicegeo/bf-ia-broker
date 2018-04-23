@@ -56,15 +56,15 @@ rather than the default (which is the newest revision in Github).
 |BF_TIDE_PREDICTION_URL|Location of the tide prediction service|https://bf-tideprediction.int.geointservices.io/tides |
 |PL_API_URL|Location of Planet Labs API|https://api.planet.com/ |
 |PL_API_KEY|Planet Labs API Key|N/A|
+|PORT|The port on which to start bf-ia-broker|8080|
 
 ## Building, running, and testing
 
 ### Build the project
 
-To build `bf-ia-broker`, run `go install` from the project directory. To build
-it from elsewhere, run:
+To build `bf-ia-broker`, run `go install` targeted at the command submodule:
 
-    $ go install github.com/venicegeo/bf-ia-broker
+    $ go install github.com/venicegeo/bf-ia-broker/cmd/bf-ia-broker
 
 This will build and place a statically-linked Go executable at
 `$GOPATH/bin/bf-ia-broker`.
@@ -78,7 +78,7 @@ To launch `bf-ia-broker` use:
 > You can also set your `PATH` to include `$GOPATH/bin` to only have to run
   `bf-ia-broker serve`.
 
-This starts the `bf-ia-broker` listening on all interfaces on port **8080**.
+This starts the `bf-ia-broker` listening on all interfaces on the configured port (default: **8080**).
 
 ### Run unit tests
 
