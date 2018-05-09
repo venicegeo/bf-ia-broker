@@ -6,80 +6,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/venicegeo/bf-ia-broker/planet"
 	"github.com/venicegeo/geojson-go/geojson"
 )
-
-func TestPlanetAssetMetadataFromAssets_Success(t *testing.T) {
-	// Mock
-	validAssets := planet.Assets{
-		Analytic: planet.Asset{
-			Location:    "https://example.localdomain/path/to/asset.JP2",
-			ExpiresAt:   time.Unix(123, 0).Format(time.RFC3339),
-			Permissions: []string{"a", "b", "c"},
-			Status:      "active",
-			Type:        "test",
-			Links: planet.Links{
-				Activate: "https://example.localdomain/path/to/activate",
-			},
-		},
-	}
-
-	// Tested code
-	data, err := PlanetAssetMetadataFromAssets(validAssets)
-
-	// Asserts
-	assert.Nil(t, err)
-	assert.NotNil(t, data)
-	assert.Equal(t, "https://example.localdomain/path/to/asset.JP2", data.AssetURL.String())
-	assert.Equal(t, time.Unix(123, 0), data.ExpiresAt)
-	assert.Equal(t, []string{"a", "b", "c"}, data.Permissions)
-	assert.Equal(t, "active", data.Status)
-	assert.Equal(t, "test", data.Type)
-	assert.Equal(t, "https://example.localdomain/path/to/activate", data.ActivationURL.String())
-}
-
-func TestPlanetAssetMetadataFromAssets_Error(t *testing.T) {
-	// Mock
-	emptyAssets := planet.Assets{}
-	badTimeAssets := planet.Assets{
-		Analytic: planet.Asset{
-			Location:  "https://example.localdomain/path/to/asset.JP2",
-			ExpiresAt: "this-is-not-a-time-format",
-			Links: planet.Links{
-				Activate: "https://example.localdomain/path/to/activate",
-			},
-		},
-	}
-	noLocationAssets := planet.Assets{
-		Analytic: planet.Asset{
-			Location:  "",
-			ExpiresAt: time.Unix(123, 0).Format(time.RFC3339),
-			Links: planet.Links{
-				Activate: "https://example.localdomain/path/to/activate",
-			},
-		},
-	}
-	noActivationAssets := planet.Assets{
-		Analytic: planet.Asset{
-			Location:  "https://example.localdomain/path/to/asset.JP2",
-			ExpiresAt: time.Unix(123, 0).Format(time.RFC3339),
-			Links:     planet.Links{},
-		},
-	}
-
-	// Tested code
-	_, emptyErr := PlanetAssetMetadataFromAssets(emptyAssets)
-	_, badTimeErr := PlanetAssetMetadataFromAssets(badTimeAssets)
-	_, noLocationErr := PlanetAssetMetadataFromAssets(noLocationAssets)
-	_, noActivationErr := PlanetAssetMetadataFromAssets(noActivationAssets)
-
-	// Asserts
-	assert.NotNil(t, emptyErr)
-	assert.NotNil(t, badTimeErr)
-	assert.NotNil(t, noLocationErr)
-	assert.NotNil(t, noActivationErr)
-}
 
 func TestPlanetAssetMetadata_Apply(t *testing.T) {
 	// Mock

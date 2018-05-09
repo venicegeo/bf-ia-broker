@@ -109,6 +109,43 @@ func TestBasicBrokerResult_GeoJSONFeature(t *testing.T) {
 	assert.Nil(t, feature.Bbox.Valid())
 }
 
+func TestSearchBrokerResult_GeoJSONFeature_WithTides(t *testing.T) {
+	// Mock
+	result := BrokerSearchResult{
+		BasicBrokerResult: mockBasicBrokerResult,
+		TidesData:         &mockTidesData,
+	}
+
+	// Tested code
+	feature, err := result.GeoJSONFeature()
+
+	// Asserts
+	assert.Nil(t, err)
+	assert.NotNil(t, feature)
+	assertFeatureContainsBasicBrokerResult(t, feature, mockBasicBrokerResult)
+	assertFeatureContainsTidesData(t, feature, mockTidesData)
+	assert.Nil(t, feature.Bbox.Valid())
+}
+
+func TestSearchBrokerResult_GeoJSONFeature_NoTides(t *testing.T) {
+	// Mock
+	result := BrokerSearchResult{
+		BasicBrokerResult: mockBasicBrokerResult,
+	}
+
+	// Tested code
+	feature, err := result.GeoJSONFeature()
+
+	// Asserts
+	assert.Nil(t, err)
+	assert.NotNil(t, feature)
+	assertFeatureContainsBasicBrokerResult(t, feature, mockBasicBrokerResult)
+	assert.Empty(t, feature.PropertyString("currentTide"))
+	assert.Empty(t, feature.PropertyString("minimumTide24Hours"))
+	assert.Empty(t, feature.PropertyString("maximumTide24Hours"))
+	assert.Nil(t, feature.Bbox.Valid())
+}
+
 func TestPlanetActivateableBrokerResult_GeoJSONFeature_NoTides(t *testing.T) {
 	// Mock
 	result := PlanetActivateableBrokerResult{

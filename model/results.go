@@ -29,6 +29,30 @@ func (br BasicBrokerResult) GeoJSONFeature() (*geojson.Feature, error) {
 	return f, nil
 }
 
+// BrokerSearchResult is contains a barebones broker search result -- basic
+// data, plus optional tides data
+type BrokerSearchResult struct {
+	BasicBrokerResult
+	*TidesData
+}
+
+// GeoJSONFeature implements the GeoJSONFeatureCreator interface
+func (result BrokerSearchResult) GeoJSONFeature() (*geojson.Feature, error) {
+	feature, err := result.BasicBrokerResult.GeoJSONFeature()
+	if err != nil {
+		return nil, err
+	}
+
+	if result.TidesData != nil {
+		err = result.TidesData.Apply(feature)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return feature, nil
+}
+
 // PlanetActivateableBrokerResult represents a Planet result that may require
 // asset activation (RapidEye, PlanetScope, Sentinel-2)
 type PlanetActivateableBrokerResult struct {

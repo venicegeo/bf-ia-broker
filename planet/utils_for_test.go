@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/venicegeo/bf-ia-broker/model"
 	"github.com/venicegeo/bf-ia-broker/tides"
 )
 
@@ -218,3 +219,17 @@ type mockLogContext struct{}
 func (ctx mockLogContext) AppName() string    { return "bf-ia-broker TESTING" }
 func (ctx mockLogContext) SessionID() string  { return "test-session" }
 func (ctx mockLogContext) LogRootDir() string { return "/tmp" }
+
+////////////////////////
+
+func mockAddTidesToSearchResults(mockError error) {
+	addTidesToSearchResults = func(context *tides.Context, results []model.BrokerSearchResult) error {
+		if mockError != nil {
+			return mockError
+		}
+		for i := range results {
+			results[i].TidesData = &model.TidesData{Current: 0.5, Min24h: 0.4, Max24h: 0.6}
+		}
+		return nil
+	}
+}

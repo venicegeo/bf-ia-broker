@@ -47,14 +47,14 @@ func TestPlanetNoParameters(t *testing.T) {
         }
   }`
 
-	requestInput := doRequestInput{
+	requestInput := planetRequestInput{
 		method:      "POST",
 		inputURL:    "data/v1/quick-search",
 		body:        []byte(body),
 		contentType: "application/json",
 	}
 
-	_, err := doRequest(requestInput, &context)
+	_, err := planetRequest(requestInput, &context)
 	assert.Nil(t, err, "Expected request to succeed; received: %v", err)
 }
 
@@ -94,6 +94,7 @@ func TestGetScenesAcquiredDate(t *testing.T) {
 func TestGetScenesTides(t *testing.T) {
 	planetServer, tidesServer, _ := createTestFixtures()
 	context := makeTestingContext(planetServer, tidesServer)
+	mockAddTidesToSearchResults(nil)
 
 	options := SearchOptions{Tides: true}
 
@@ -105,6 +106,7 @@ func TestGetScenesTides(t *testing.T) {
 func TestGetMetadata(t *testing.T) {
 	planetServer, tidesServer, _ := createTestFixtures()
 	context := makeTestingContext(planetServer, tidesServer)
+	mockAddTidesToSearchResults(nil)
 
 	options := SearchOptions{Tides: true}
 

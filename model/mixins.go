@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/venicegeo/bf-ia-broker/planet"
 	"github.com/venicegeo/geojson-go/geojson"
 )
 
@@ -19,40 +18,6 @@ type PlanetAssetMetadata struct {
 	Permissions   []string
 	Status        string
 	Type          string
-}
-
-// PlanetAssetMetadataFromAssets constructs a PlanetAssetMetadata by extracting
-// data from a planet.Assets response container
-func PlanetAssetMetadataFromAssets(assets planet.Assets) (*PlanetAssetMetadata, error) {
-	expiresAt, err := time.Parse(time.RFC3339, assets.Analytic.ExpiresAt)
-	if err != nil {
-		return nil, err
-	}
-	permissionsCopy := append([]string{}, assets.Analytic.Permissions...)
-
-	assetURL, err := url.Parse(assets.Analytic.Location)
-	if assetURL == nil || assetURL.String() == "" {
-		err = errors.New("No analytic asset location URL parsed")
-	}
-	if err != nil {
-		return nil, err
-	}
-	activationURL, err := url.Parse(assets.Analytic.Links.Activate)
-	if activationURL == nil || activationURL.String() == "" {
-		err = errors.New("No asset activation URL parsed")
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return &PlanetAssetMetadata{
-		AssetURL:      *assetURL,
-		ActivationURL: *activationURL,
-		ExpiresAt:     expiresAt,
-		Permissions:   permissionsCopy,
-		Status:        assets.Analytic.Status,
-		Type:          assets.Analytic.Type,
-	}, nil
 }
 
 // Apply implements the GeoJSONFeatureMixin interface

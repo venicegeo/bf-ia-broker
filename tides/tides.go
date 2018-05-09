@@ -22,58 +22,7 @@ import (
 	"github.com/venicegeo/geojson-go/geojson"
 )
 
-// Context is the context for this operation
-type Context struct {
-	TidesURL  string
-	sessionID string
-}
-
-// AppName returns an empty string
-func (c *Context) AppName() string {
-	return "bf-ia-broker"
-}
-
-// SessionID returns a Session ID, creating one if needed
-func (c *Context) SessionID() string {
-	if c.sessionID == "" {
-		c.sessionID, _ = util.PsuUUID()
-	}
-	return c.sessionID
-}
-
-// LogRootDir returns an empty string
-func (c *Context) LogRootDir() string {
-	return ""
-}
-
-type tideIn struct {
-	Lat float64 `json:"lat"`
-	Lon float64 `json:"lon"`
-	Dtg string  `json:"dtg"`
-}
-
-type tidesIn struct {
-	Locations []tideIn `json:"locations"`
-}
-
-type tideOut struct {
-	MinTide  float64 `json:"minimumTide24Hours"`
-	MaxTide  float64 `json:"maximumTide24Hours"`
-	CurrTide float64 `json:"currentTide"`
-}
-
-type tideWrapper struct {
-	Lat     float64 `json:"lat"`
-	Lon     float64 `json:"lon"`
-	Dtg     string  `json:"dtg"`
-	Results tideOut `json:"results"`
-}
-
-type out struct {
-	Locations []tideWrapper `json:"locations"`
-}
-
-func toTideIn(bbox geojson.BoundingBox, timeStr string) *tideIn {
+func toTideIn(bbox geojson.BoundingBox, timeStr string) *InputLocation {
 	var (
 		center  *geojson.Point
 		dtgTime time.Time
@@ -85,10 +34,10 @@ func toTideIn(bbox geojson.BoundingBox, timeStr string) *tideIn {
 	if dtgTime, err = time.Parse("2006-01-02T15:04:05Z", timeStr); err != nil {
 		return nil
 	}
-	return &tideIn{Lat: center.Coordinates[1], Lon: center.Coordinates[0], Dtg: dtgTime.Format("2006-01-02-15-04")}
+	return &InputLocation{Lat: center.Coordinates[1], Lon: center.Coordinates[0], Dtg: dtgTime.Format("2006-01-02-15-04")}
 }
 
-func toTidesIn(features []*geojson.Feature, context util.LogContext) (result tidesIn, dtgFeatureMap map[string]*geojson.Feature) {
+func toTidesIn(features []*geojson.Feature, context util.LogContext) (result Input, dtgFeatureMap map[string]*geojson.Feature) {
 	dtgFeatureMap = make(map[string]*geojson.Feature)
 	for _, feature := range features {
 		currTideIn := toTideIn(feature.ForceBbox(), feature.PropertyString("acquiredDate"))
@@ -110,7 +59,7 @@ func toTidesIn(features []*geojson.Feature, context util.LogContext) (result tid
 func GetTides(fc *geojson.FeatureCollection, context *Context) (*geojson.FeatureCollection, error) {
 	var (
 		err    error
-		tout   out
+		tout   Output
 		result *geojson.FeatureCollection
 	)
 	tidesURL := context.TidesURL
