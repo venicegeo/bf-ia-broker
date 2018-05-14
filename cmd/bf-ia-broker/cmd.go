@@ -37,6 +37,12 @@ var commands = cli.Commands{
 		Usage:   "Update the database with the latest landsat entries",
 		Action:  landsatIngestAction,
 	},
+	cli.Command{
+		Name:    "migrate",
+		Aliases: []string{"m"},
+		Usage:   "Update database schema",
+		Action:  migrateDatabaseAction,
+	},
 }
 
 func createCliApp() (app *cli.App) {
