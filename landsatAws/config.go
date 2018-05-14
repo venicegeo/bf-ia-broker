@@ -8,7 +8,7 @@ const wrsRowColumn string = "row"
 const downloadURLColumn = "download_url"
 
 const insertSceneStatement = `
-INSERT INTO scenes (
+INSERT INTO scenes as s (
 	product_id, 
 	acquisition_date, 
 	cloud_cover, 
@@ -28,7 +28,8 @@ VALUES
 	path=$4 AND row=$5 LIMIT 1)
 )
 	ON CONFLICT (product_id) DO UPDATE 
-	SET scene_url =	$6
+	SET scene_url =	$6 
+	WHERE s.scene_url <> $6
 	`
 
 const databaseMaintenanceStatement = `

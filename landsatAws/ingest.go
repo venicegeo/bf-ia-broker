@@ -11,8 +11,9 @@ import (
 )
 
 type insertStats struct {
-	NumberSuccess int
-	NumberError   int
+	NumberAddedOrUpdated int
+	NumberSkipped        int
+	NumberError          int
 }
 
 //csvValueConverter is used to transform the values from the csv file into
@@ -46,7 +47,7 @@ func ingest(
 	//Create the prepared statement that will be used to insert records.
 	stmt, err := db.Prepare(insertStatement)
 	if err != nil {
-		log.Fatal("Prepare statement failed.")
+		log.Fatal("Prepare statement failed.", err)
 	}
 	defer stmt.Close()
 
@@ -72,17 +73,19 @@ CSVLoop:
 		switch csvErr {
 		case nil:
 			columnMap.UpdateMap(rawLineValues, valueMap)
-			err = executeInsert(stmt, valueMap, converters)
+			rowsAffected, err := executeInsert(stmt, valueMap, converters)
 			if err != nil {
 				stats.NumberError++
 				log.Println("Error inserting scene into db.", err, rawLineValues)
 			} else {
-				stats.NumberSuccess++
+				stats.NumberAddedOrUpdated += rowsAffected
+				stats.NumberSkipped += (1 - rowsAffected)
 			}
 		case io.EOF:
 			break CSVLoop
 		default:
 			log.Println("Error reading csv line:", csvErr, rawLineValues)
+			stats.NumberError++
 		}
 	}
 	log.Printf("Ingest Complete: %+v", stats)
@@ -106,7 +109,8 @@ func doDatabaseMaintenance(database *sql.DB) {
 func executeInsert(
 	statement *sql.Stmt,
 	valueMap map[string]string,
-	converters []csvValueConverter) error {
+	converters []csvValueConverter) (int, error) {
+
 	var err error
 	dbValues := make([]interface{}, len(converters))
 
@@ -119,9 +123,15 @@ func executeInsert(
 		}
 	}
 
-	if err == nil {
-		_, err = statement.Exec(dbValues...)
+	if err != nil {
+		return 0, err
 	}
 
-	return err
+	var rowsAffected int64 // zero
+	result, err := statement.Exec(dbValues...)
+	if err != nil {
+		rowsAffected, err = result.RowsAffected()
+	}
+
+	return int(rowsAffected), err
 }
