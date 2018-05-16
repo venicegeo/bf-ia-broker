@@ -1,14 +1,13 @@
 package main
 
 import (
-	"compress/gzip"
 	"database/sql"
-	"io"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/venicegeo/bf-ia-broker/landsataws"
 
@@ -19,51 +18,61 @@ import (
 const connectionStringEnv = "postgresConnectionString"
 const scenesFileEnv = "scenesCsvUrl"
 
+//landsatIngestAction starts the worker process and an http server
 func landsatIngestAction(*cli.Context) {
+	portStr := getPortStr()
+
 	scenesURL := os.Getenv(scenesFileEnv)
 	scenesIsGzip := strings.HasSuffix(strings.ToLower(scenesURL), "gz")
+	importer := landsataws.NewImporter(scenesURL, scenesIsGzip, getDbConnection)
 
-	var mainReader io.Reader
-	sourceReader, err := openReader(scenesURL)
-	if err != nil {
-		log.Fatal("Could not open the source file/url.")
-	}
-	defer sourceReader.Close()
-	mainReader = sourceReader
+	messageChan := make(chan string, 5) //small buffer. 1 is probably sufficient.
+	//scheduleTicker := time.NewTicker()  //time.NewTicker(24 * time.Hour)
 
-	if scenesIsGzip {
-		archiveReader, zipErr := gzip.NewReader(mainReader)
-		if zipErr != nil {
-			log.Fatal("Error opening gzip archive.", zipErr)
-		}
-		defer archiveReader.Close()
-		mainReader = archiveReader
-	}
+	//Start the sleep/ingest loop.
+	go importer.ImportWhile(messageChan, 2*time.Minute)
+	//go sendStartMessageOnTick(scheduleTicker.C, messageChan)
 
-	database, err := getDbConnection()
-	if err != nil {
-		log.Fatal("Could not open database connection.")
-	}
-	defer database.Close()
+	router := landsataws.NewRouter()
+	router.HandleFunc("/ingest/", func(resp http.ResponseWriter, req *http.Request) { handleImportStatus(importer, resp, req) })
+	router.HandleFunc("/ingest/forceStart", func(resp http.ResponseWriter, req *http.Request) {
+		handleForceStartIngest(importer, messageChan, resp, req)
+	})
+	router.HandleFunc("/ingest/cancelJob", func(resp http.ResponseWriter, req *http.Request) { handleCancel(importer, messageChan, resp, req) })
 
-	landsataws.Ingest(mainReader, database)
+	log.Println("Starting server...")
+	log.Fatal(http.ListenAndServe(portStr, router))
+
 }
 
-func openReader(scenesURL string) (io.ReadCloser, error) {
-	if strings.HasPrefix(scenesURL, "http://") || strings.HasPrefix(scenesURL, "https://") {
-		log.Println("Requesting url:", scenesURL)
-		archiveResponse, netErr := http.Get("https://landsat-pds.s3.amazonaws.com/c1/L8/scene_list.gz")
-		if netErr != nil {
-			return nil, netErr
-		}
-		return archiveResponse.Body, nil
-	}
+// func sendStartMessageOnTick(producer <-chan time.Time, consumer chan<- string) {
+// 	for range producer {
+// 		consumer <- landsataws.BeginIngestJobMessage
+// 	}
+// }
 
-	//Treat this as a file.
-	cleanPath := filepath.Clean(scenesURL)
-	log.Println("Opening file", cleanPath)
-	file, err := os.Open(cleanPath)
-	return file, err
+func handleImportStatus(imp *landsataws.Importer, writer http.ResponseWriter, req *http.Request) {
+	fmt.Fprintln(writer, imp.GetStatus())
+}
+
+func handleForceStartIngest(imp *landsataws.Importer, messageChan chan<- string, writer http.ResponseWriter, req *http.Request) {
+	select {
+	case messageChan <- landsataws.BeginIngestJobMessage:
+		fmt.Fprintln(writer, "Begin job request submitted.")
+	default:
+		fmt.Fprintln(writer, "Error submitting request.")
+	}
+	fmt.Fprintln(writer, imp.GetStatus())
+}
+
+func handleCancel(imp *landsataws.Importer, cancelChan chan<- string, writer http.ResponseWriter, req *http.Request) {
+	select {
+	case cancelChan <- landsataws.AbortIngestJobMessage:
+		fmt.Fprintln(writer, "Cancel request submitted.")
+	default:
+		fmt.Fprintln(writer, "Error submitting cancel request.")
+	}
+	fmt.Fprintln(writer, imp.GetStatus())
 }
 
 func getDbConnection() (*sql.DB, error) {
