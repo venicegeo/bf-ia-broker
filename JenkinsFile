@@ -21,11 +21,11 @@ node {
     }
     // read the current configuration
     def configJson = readJSON file: "${configFile}"
-    for (param in configJson.credparams + configJson.jobparams) { 
+    for (param in configJson.credparams + configJson.jobparams) {
       env."${param.name}" = (param.type == "booleanParam") ? "${param.defaultvalue}".toBoolean() : "${param.defaultvalue}"
     }
   }
-  
+
   def printLogsFailsafe = {String logAppName ->
     try {
       echo "Printing recent logs for ${logAppName}"
@@ -49,7 +49,7 @@ node {
           cf auth ${CFUSER} ${CFPASS}
           cf target -o ${env.PCF_ORG} -s ${pcfSpace}
           cf push ${deployAppName} -f manifest.jenkins.yml --hostname ${deployAppName} -d ${pcfDomain} --no-start
-		"""  
+		"""
 		try {
 			sh """
 			  cf set-env ${deployAppName} SPACE ${pcfSpace}
@@ -164,7 +164,7 @@ node {
         mkdir -p ${GOPATH}/src/github.com/venicegeo/bf-ia-broker
         find . -maxdepth 1 -mindepth 1 -not -name gopath -exec cp -R '{}' gopath/src/github.com/venicegeo/bf-ia-broker/ \\;
         cd "\$GOPATH/src/github.com/venicegeo/bf-ia-broker"
-        go install
+        go install github.com/venicegeo/bf-ia-broker/cmd/bf-ia-broker
         cd landsat
         go test -v -coverprofile=${root}/landsat.cov
         cd ..

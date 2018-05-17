@@ -1,30 +1,16 @@
-hash: 836befbb1c3a8ecde08370daeeae9aae3fd60df25249df837e7bf3a12ad9cc8e
-updated: 2017-11-29T12:00:26.378734342-05:00
+hash: 65a05f917c7cb298b7cf9e105b7c31311fd0667acdb6f22449caa0751791f549
+updated: 2018-04-20T14:52:22.6407621-04:00
 imports:
-- name: github.com/gorilla/context
-  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
   version: 392c28fe23e1c45ddba891b0320b3b5df220beea
-- name: github.com/inconshreveable/mousetrap
-  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
-- name: github.com/spf13/cobra
-  version: 7b2c5ac9fc04fc5efafb60700713d4fa609b777b
-- name: github.com/spf13/pflag
-  version: 4c012f6dcd9546820e378d0bdda4d8fc772cdfea
 - name: github.com/stretchr/testify
   version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
   - assert
 - name: github.com/venicegeo/geojson-go
-  version: ceec07fbe640c2e3eb65f3563d62f5657bf75ea2
+  version: 13c8a2a1f1ce1ed19225cf1ca8adcff1a5e37588
   subpackages:
   - geojson
-testImports:
-- name: github.com/davecgh/go-spew
-  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
-  subpackages:
-  - spew
-- name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
-  subpackages:
-  - difflib
+- name: gopkg.in/urfave/cli.v1
+  version: cfb38830724cc34fedffe9a2a29fb54fa9169cd1
+testImports: []
