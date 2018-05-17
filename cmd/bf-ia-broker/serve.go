@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/venicegeo/bf-ia-broker/landsat"
+	landsat "github.com/venicegeo/bf-ia-broker/landsat_planet"
 	"github.com/venicegeo/bf-ia-broker/planet"
 	"github.com/venicegeo/bf-ia-broker/util"
 	cli "gopkg.in/urfave/cli.v1"

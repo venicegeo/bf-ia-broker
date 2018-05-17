@@ -1,4 +1,4 @@
-package landsataws
+package db
 
 const productIDColumn string = "productId"
 const captureDateColumn string = "acquisitionDate"
@@ -9,14 +9,14 @@ const downloadURLColumn = "download_url"
 
 const insertSceneStatement = `
 INSERT INTO scenes as s (
-	product_id, 
-	acquisition_date, 
-	cloud_cover, 
+	product_id,
+	acquisition_date,
+	cloud_cover,
 	wrs_path,
-	wrs_row, 
-	scene_url, 
-	bounds) 
-VALUES 
+	wrs_row,
+	scene_url,
+	bounds)
+VALUES
 (
 	$1,
 	$2,
@@ -24,11 +24,11 @@ VALUES
 	$4,
 	$5,
 	$6,
-	(SELECT boundary FROM wrs2paths WHERE 
+	(SELECT boundary FROM wrs2paths WHERE
 	path=$4 AND row=$5 LIMIT 1)
 )
-	ON CONFLICT (product_id) DO UPDATE 
-	SET scene_url =	$6 
+	ON CONFLICT (product_id) DO UPDATE
+	SET scene_url =	$6
 	WHERE s.scene_url <> $6
 	`
 

@@ -1,4 +1,4 @@
-package landsataws
+package db
 
 import (
 	"database/sql"
@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	csvcolumnmap "github.com/venicegeo/bf-ia-broker/landsatAws/csvColumnMap"
+	csvcolumnmap "github.com/venicegeo/bf-ia-broker/landsat_selfindex/db/csvColumnMap"
 )
 
 //BeginIngestJobMessage is sent on a channel to start an ingest job.

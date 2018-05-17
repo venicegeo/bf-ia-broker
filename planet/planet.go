@@ -26,7 +26,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/venicegeo/bf-ia-broker/landsat"
+	landsat "github.com/venicegeo/bf-ia-broker/landsat_planet"
 	"github.com/venicegeo/bf-ia-broker/model"
 	"github.com/venicegeo/bf-ia-broker/tides"
 	"github.com/venicegeo/bf-ia-broker/util"

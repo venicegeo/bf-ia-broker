@@ -1,4 +1,4 @@
-package landsataws
+package db
 
 import (
 	"compress/gzip"

@@ -11,7 +11,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/venicegeo/bf-ia-broker/landsataws"
+	db "github.com/venicegeo/bf-ia-broker/landsat_selfindex/db"
 
 	_ "github.com/lib/pq"
 	cli "gopkg.in/urfave/cli.v1"
@@ -28,7 +28,7 @@ func landsatIngestAction(*cli.Context) {
 
 	scenesURL := os.Getenv(scenesFileEnv)
 	scenesIsGzip := strings.HasSuffix(strings.ToLower(scenesURL), "gz")
-	importer := landsataws.NewImporter(scenesURL, scenesIsGzip, getDbConnection)
+	importer := db.NewImporter(scenesURL, scenesIsGzip, getDbConnection)
 
 	//Create the channel that sends the star/stop messages to the Importer.
 	messageChan := make(chan string, 5) //small buffer.
@@ -53,14 +53,14 @@ func landsatIngestAction(*cli.Context) {
 }
 
 //handleImportStatus requests the status from the importer and writes it out.
-func handleImportStatus(imp *landsataws.Importer, writer http.ResponseWriter, req *http.Request) {
+func handleImportStatus(imp *db.Importer, writer http.ResponseWriter, req *http.Request) {
 	fmt.Fprintln(writer, imp.GetStatus())
 }
 
 //handleForceStartIngest sends a "begin" message to the importer and returns the new status to the user.
-func handleForceStartIngest(imp *landsataws.Importer, messageChan chan<- string, writer http.ResponseWriter, req *http.Request) {
+func handleForceStartIngest(imp *db.Importer, messageChan chan<- string, writer http.ResponseWriter, req *http.Request) {
 	select {
-	case messageChan <- landsataws.BeginIngestJobMessage:
+	case messageChan <- db.BeginIngestJobMessage:
 		fmt.Fprintln(writer, "Begin job request submitted.")
 	default:
 		fmt.Fprintln(writer, "Error submitting request.")
@@ -69,9 +69,9 @@ func handleForceStartIngest(imp *landsataws.Importer, messageChan chan<- string,
 }
 
 //handleCancel sends a "cancel" message to the importer and returns the new status to the user.
-func handleCancel(imp *landsataws.Importer, cancelChan chan<- string, writer http.ResponseWriter, req *http.Request) {
+func handleCancel(imp *db.Importer, cancelChan chan<- string, writer http.ResponseWriter, req *http.Request) {
 	select {
-	case cancelChan <- landsataws.AbortIngestJobMessage:
+	case cancelChan <- db.AbortIngestJobMessage:
 		fmt.Fprintln(writer, "Cancel request submitted.")
 	default:
 		fmt.Fprintln(writer, "Error submitting cancel request.")
@@ -88,7 +88,7 @@ func getDbConnection() (*sql.DB, error) {
 		return nil, err
 	}
 
-	if err := db.Ping(); err != nil {
+	if err = db.Ping(); err != nil {
 		return nil, err
 	}
 
