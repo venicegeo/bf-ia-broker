@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	"github.com/venicegeo/bf-ia-broker/landsataws"
 
 	_ "github.com/lib/pq"
@@ -17,6 +19,8 @@ import (
 
 const connectionStringEnv = "postgresConnectionString"
 const scenesFileEnv = "scenesCsvUrl"
+const ingestFrequencyEnv = "ingest_frequency"
+const defaultIngestFrequency = 24 * time.Hour
 
 //landsatIngestAction starts the worker process and an http server
 func landsatIngestAction(*cli.Context) {
@@ -26,35 +30,34 @@ func landsatIngestAction(*cli.Context) {
 	scenesIsGzip := strings.HasSuffix(strings.ToLower(scenesURL), "gz")
 	importer := landsataws.NewImporter(scenesURL, scenesIsGzip, getDbConnection)
 
-	messageChan := make(chan string, 5) //small buffer. 1 is probably sufficient.
-	//scheduleTicker := time.NewTicker()  //time.NewTicker(24 * time.Hour)
+	//Create the channel that sends the star/stop messages to the Importer.
+	messageChan := make(chan string, 5) //small buffer.
 
 	//Start the sleep/ingest loop.
-	go importer.ImportWhile(messageChan, 2*time.Minute)
-	//go sendStartMessageOnTick(scheduleTicker.C, messageChan)
+	go importer.ImportWhile(messageChan, getTimerDuration())
 
-	router := landsataws.NewRouter()
-	router.HandleFunc("/ingest/", func(resp http.ResponseWriter, req *http.Request) { handleImportStatus(importer, resp, req) })
-	router.HandleFunc("/ingest/forceStart", func(resp http.ResponseWriter, req *http.Request) {
+	//Set up an http router
+	router := mux.NewRouter()
+	router.HandleFunc("/ingest/", func(resp http.ResponseWriter, req *http.Request) {
+		handleImportStatus(importer, resp, req)
+	})
+	router.HandleFunc("/ingest/start", func(resp http.ResponseWriter, req *http.Request) {
 		handleForceStartIngest(importer, messageChan, resp, req)
 	})
-	router.HandleFunc("/ingest/cancelJob", func(resp http.ResponseWriter, req *http.Request) { handleCancel(importer, messageChan, resp, req) })
+	router.HandleFunc("/ingest/cancel", func(resp http.ResponseWriter, req *http.Request) {
+		handleCancel(importer, messageChan, resp, req)
+	})
 
-	log.Println("Starting server...")
+	log.Println("Listening on port", portStr)
 	log.Fatal(http.ListenAndServe(portStr, router))
-
 }
 
-// func sendStartMessageOnTick(producer <-chan time.Time, consumer chan<- string) {
-// 	for range producer {
-// 		consumer <- landsataws.BeginIngestJobMessage
-// 	}
-// }
-
+//handleImportStatus requests the status from the importer and writes it out.
 func handleImportStatus(imp *landsataws.Importer, writer http.ResponseWriter, req *http.Request) {
 	fmt.Fprintln(writer, imp.GetStatus())
 }
 
+//handleForceStartIngest sends a "begin" message to the importer and returns the new status to the user.
 func handleForceStartIngest(imp *landsataws.Importer, messageChan chan<- string, writer http.ResponseWriter, req *http.Request) {
 	select {
 	case messageChan <- landsataws.BeginIngestJobMessage:
@@ -65,6 +68,7 @@ func handleForceStartIngest(imp *landsataws.Importer, messageChan chan<- string,
 	fmt.Fprintln(writer, imp.GetStatus())
 }
 
+//handleCancel sends a "cancel" message to the importer and returns the new status to the user.
 func handleCancel(imp *landsataws.Importer, cancelChan chan<- string, writer http.ResponseWriter, req *http.Request) {
 	select {
 	case cancelChan <- landsataws.AbortIngestJobMessage:
@@ -75,6 +79,7 @@ func handleCancel(imp *landsataws.Importer, cancelChan chan<- string, writer htt
 	fmt.Fprintln(writer, imp.GetStatus())
 }
 
+//getDbConnection opens a new database connection.
 func getDbConnection() (*sql.DB, error) {
 	connStr := os.Getenv(connectionStringEnv)
 
@@ -88,4 +93,15 @@ func getDbConnection() (*sql.DB, error) {
 	}
 
 	return db, err
+}
+
+func getTimerDuration() time.Duration {
+	duration, _ := time.ParseDuration(os.Getenv(ingestFrequencyEnv))
+
+	if duration < (time.Minute) {
+		log.Printf("Specified duration of %v is too small. Setting to default.", duration)
+		duration = defaultIngestFrequency
+	}
+
+	return duration
 }

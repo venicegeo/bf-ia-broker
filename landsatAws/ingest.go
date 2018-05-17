@@ -50,7 +50,7 @@ type csvValueConverter func(map[string]string) (interface{}, error)
 //Ingest reads from the stream as a CSV and inserts/updates database records for scenes.
 func (imp *Importer) Ingest(reader io.Reader, database *sql.DB, cancelChan <-chan string) (result string) {
 	csvReader := csv.NewReader(reader)
-	firstRow, err := csvReader.Read() //discard the first row.
+	firstRow, err := csvReader.Read() //read the first row, it should contain the column names
 	if err != nil {
 		log.Fatal("Error reading first line.")
 	}
@@ -63,7 +63,7 @@ func (imp *Importer) Ingest(reader io.Reader, database *sql.DB, cancelChan <-cha
 	return imp.ingest(csvReader, insertSceneStatement, colMap, columnConverters, database, cancelChan)
 }
 
-//ingest reads the csv file and populates that database
+//ingest reads the csv file and populates/updates the database
 func (imp *Importer) ingest(
 	sceneCsv *csv.Reader,
 	insertStatement string,
@@ -91,6 +91,9 @@ func (imp *Importer) ingest(
 	lastProgressLogTime := time.Now()
 	progressLogInterval := time.Duration(time.Second * 30)
 
+	//The insert loop tries to be robust to errors in the CSV file;
+	//entries that cannot be parsed or inserted are logged but the loop continues.
+	log.Println("Reading CSV...")
 CSVLoop:
 	for {
 		//Check whether the user has requested cancelation.
@@ -121,7 +124,7 @@ CSVLoop:
 				stats.NumberError++
 				log.Println("Error inserting scene into db.", err, rawLineValues)
 			} else {
-				//No error during database insert.
+				//Successfully inserted/updated scene.
 				stats.NumberAddedOrUpdated += rowsAffected
 				stats.NumberSkipped += (1 - rowsAffected)
 			}
@@ -136,8 +139,9 @@ CSVLoop:
 		}
 	}
 
-	//Clear the status requests before doing the long-running operation.
+	//Clear the status requests before submitting the potentially long-running operation.
 	drainStatusChannel(imp.statusChan, &stats)
+	//Do the database maintenance. Could take a while.
 	doDatabaseMaintenance(db)
 
 	stats.EndTime = time.Now()
@@ -200,6 +204,8 @@ func executeInsert(
 	var err error
 	dbValues := make([]interface{}, len(converters))
 
+	//loop over the converters to transform the values in the csv file
+	//into the arguments for the SQL INSERT
 	for idx, conv := range converters {
 		dbValues[idx], err = conv(valueMap)
 
