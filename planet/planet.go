@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -83,6 +84,9 @@ func GetScenes(options SearchOptions, context *Context) (*geojson.FeatureCollect
 	responseBody, _ = ioutil.ReadAll(response.Body)
 
 	results, err := parseSearchResults(context, responseBody)
+	if err != nil {
+		return nil, err
+	}
 	if options.Tides {
 		tidesContext := tides.Context{TidesURL: context.BaseTidesURL}
 		if err = addTidesToSearchResults(&tidesContext, results); err != nil {
@@ -98,11 +102,9 @@ func GetScenes(options SearchOptions, context *Context) (*geojson.FeatureCollect
 	return model.MultiBrokerResult{FeatureCreators: featureCreators}.GeoJSONFeatureCollection()
 }
 
-// GetAsset returns the status of the analytic asset and
-// attempts to activate it if needed
-func GetAsset(options MetadataOptions, context *Context) (Asset, error) {
+// GetPlanetAssets returns the asset metadata related to a particular item
+func GetPlanetAssets(options MetadataOptions, context *Context) (*model.PlanetAssetMetadata, error) {
 	var (
-		result   Asset
 		response *http.Response
 		err      error
 		body     []byte
@@ -111,17 +113,17 @@ func GetAsset(options MetadataOptions, context *Context) (Asset, error) {
 	// Note: trailing `/` is needed here to avoid a redirect which causes a Go 1.7 redirect bug issue
 	inputURL := "data/v1/item-types/" + options.ItemType + "/items/" + options.ID + "/assets/"
 	if response, err = planetRequest(planetRequestInput{method: "GET", inputURL: inputURL}, context); err != nil {
-		return result, err
+		return nil, err
 	}
 	switch {
 	case (response.StatusCode >= 400) && (response.StatusCode < 500):
 		message := fmt.Sprintf("Failed to get asset information for scene %v: %v. ", options.ID, response.Status)
 		err := util.HTTPErr{Status: response.StatusCode, Message: message}
 		util.LogAlert(context, message)
-		return result, err
+		return nil, err
 	case response.StatusCode >= 500:
 		err = util.LogSimpleErr(context, fmt.Sprintf("Failed to get asset information for scene %v. ", options.ID), errors.New(response.Status))
-		return result, err
+		return nil, err
 	default:
 		//no op
 	}
@@ -134,30 +136,41 @@ func GetAsset(options MetadataOptions, context *Context) (Asset, error) {
 			URL:        inputURL,
 			HTTPStatus: response.StatusCode}
 		err = plErr.Log(context, "")
-		return result, err
+		return nil, err
 	}
 
-	if assets.Analytic.Type == "" && (options.ItemType == "REOrthoTile" || options.ItemType == "PSOrthoTile") {
-		// RapidEye and PlanetScope scenes *must* have analytic asset data
-		plErr := util.Error{LogMsg: "Invalid data from Planet API asset request (analytic asset type is empty)",
+	assetMetadata, err := planetAssetMetadataFromAssets(assets)
+
+	log.Print("XXXXXXXX")
+	log.Print(string(body))
+	log.Print(assets)
+	log.Print(assetMetadata)
+	log.Print(err)
+
+	if err == nil && assetMetadata == nil && (options.ItemType == "REOrthoTile" || options.ItemType == "PSOrthoTile") {
+		err = errors.New("Found no asset data in response for item type requiring asset data")
+	}
+
+	if err != nil {
+		plErr := util.Error{LogMsg: "Invalid data from Planet API asset request: " + err.Error(),
 			SimpleMsg:  "Planet Labs returned invalid metadata for this scene's assets.",
 			Response:   string(body),
 			URL:        inputURL,
 			HTTPStatus: response.StatusCode}
 		err = plErr.Log(context, "")
-		return assets.Analytic, util.HTTPErr{Status: http.StatusBadGateway, Message: plErr.SimpleMsg}
+		return assetMetadata, util.HTTPErr{Status: http.StatusBadGateway, Message: plErr.SimpleMsg}
 	}
 
-	return assets.Analytic, nil
+	return assetMetadata, nil
 }
 
-// GetMetadata returns the Beachfront metadata for a single scene
-func GetMetadata(options MetadataOptions, context *Context) (*geojson.Feature, error) {
+// GetPlanetItem returns the Beachfront metadata for a single scene
+func GetPlanetItem(options MetadataOptions, context *Context) (*model.BrokerSearchResult, error) {
 	var (
-		response *http.Response
-		err      error
-		body     []byte
-		feature  geojson.Feature
+		response      *http.Response
+		err           error
+		body          []byte
+		planetFeature geojson.Feature
 	)
 	inputURL := "data/v1/item-types/" + options.ItemType + "/items/" + options.ID
 	input := planetRequestInput{method: "GET", inputURL: inputURL}
@@ -178,7 +191,7 @@ func GetMetadata(options MetadataOptions, context *Context) (*geojson.Feature, e
 	default:
 		//no op
 	}
-	if err = json.Unmarshal(body, &feature); err != nil {
+	if err = json.Unmarshal(body, &planetFeature); err != nil {
 		plErr := util.Error{LogMsg: "Failed to Unmarshal response from Planet API data request: " + err.Error(),
 			SimpleMsg:  "Planet Labs returned an unexpected response for this request. See log for further details.",
 			Response:   string(body),
@@ -188,32 +201,36 @@ func GetMetadata(options MetadataOptions, context *Context) (*geojson.Feature, e
 		return nil, err
 	}
 
-	feature = *transformSRFeature(&feature, context)
+	result, err := planetSearchBrokerResultFromFeature(&planetFeature)
+	if err != nil {
+		return nil, err
+	}
+
 	if options.Tides {
 		var (
 			tc tides.Context
 		)
 		tc.TidesURL = context.BaseTidesURL
-		fc := geojson.NewFeatureCollection([]*geojson.Feature{&feature})
-		if fc, err = tides.GetTides(fc, &tc); err != nil {
+		tidesData, err := tides.GetSingleTidesData(&tc, result.BasicBrokerResult)
+		if err != nil {
 			return nil, err
 		}
-		feature = *fc.Features[0]
+		result.TidesData = tidesData
 	}
 
-	return &feature, nil
+	return result, nil
 }
 
 // Activate retrieves and activates the analytic asset.
 func Activate(options MetadataOptions, context *Context) (*http.Response, error) {
 	var (
-		asset Asset
-		err   error
+		assetMetadata *model.PlanetAssetMetadata
+		err           error
 	)
-	if asset, err = GetAsset(options, context); err != nil {
+	if assetMetadata, err = GetPlanetAssets(options, context); err != nil {
 		return nil, err
 	}
-	return planetRequest(planetRequestInput{method: "POST", inputURL: asset.Links.Activate}, context)
+	return planetRequest(planetRequestInput{method: "POST", inputURL: assetMetadata.ActivationURL.String()}, context)
 }
 
 // planetRequest performs the request

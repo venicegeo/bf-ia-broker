@@ -5,14 +5,16 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/venicegeo/bf-ia-broker/model"
 )
 
 func TestPlanetAssetMetadataFromAssets_Success(t *testing.T) {
 	// Mock
+	mockExpiresAt := time.Unix(123, 0).UTC()
 	validAssets := Assets{
 		Analytic: Asset{
 			Location:    "https://example.localdomain/path/to/asset.JP2",
-			ExpiresAt:   time.Unix(123, 0).Format(time.RFC3339),
+			ExpiresAt:   mockExpiresAt.Format(model.PlanetTimeFormat),
 			Permissions: []string{"a", "b", "c"},
 			Status:      "active",
 			Type:        "test",
@@ -29,7 +31,7 @@ func TestPlanetAssetMetadataFromAssets_Success(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, data)
 	assert.Equal(t, "https://example.localdomain/path/to/asset.JP2", data.AssetURL.String())
-	assert.Equal(t, time.Unix(123, 0), data.ExpiresAt)
+	assert.Equal(t, mockExpiresAt, data.ExpiresAt)
 	assert.Equal(t, []string{"a", "b", "c"}, data.Permissions)
 	assert.Equal(t, "active", data.Status)
 	assert.Equal(t, "test", data.Type)
@@ -41,6 +43,7 @@ func TestPlanetAssetMetadataFromAssets_Error(t *testing.T) {
 	emptyAssets := Assets{}
 	badTimeAssets := Assets{
 		Analytic: Asset{
+			Type:      "REOrthoTile",
 			Location:  "https://example.localdomain/path/to/asset.JP2",
 			ExpiresAt: "this-is-not-a-time-format",
 			Links: Links{
@@ -50,8 +53,9 @@ func TestPlanetAssetMetadataFromAssets_Error(t *testing.T) {
 	}
 	noLocationAssets := Assets{
 		Analytic: Asset{
+			Type:      "REOrthoTile",
 			Location:  "",
-			ExpiresAt: time.Unix(123, 0).Format(time.RFC3339),
+			ExpiresAt: time.Unix(123, 0).Format(model.PlanetTimeFormat),
 			Links: Links{
 				Activate: "https://example.localdomain/path/to/activate",
 			},
@@ -59,20 +63,22 @@ func TestPlanetAssetMetadataFromAssets_Error(t *testing.T) {
 	}
 	noActivationAssets := Assets{
 		Analytic: Asset{
+			Type:      "REOrthoTile",
 			Location:  "https://example.localdomain/path/to/asset.JP2",
-			ExpiresAt: time.Unix(123, 0).Format(time.RFC3339),
+			ExpiresAt: time.Unix(123, 0).Format(model.PlanetTimeFormat),
 			Links:     Links{},
 		},
 	}
 
 	// Tested code
-	_, emptyErr := planetAssetMetadataFromAssets(emptyAssets)
+	emptyResult, emptyErr := planetAssetMetadataFromAssets(emptyAssets)
 	_, badTimeErr := planetAssetMetadataFromAssets(badTimeAssets)
 	_, noLocationErr := planetAssetMetadataFromAssets(noLocationAssets)
 	_, noActivationErr := planetAssetMetadataFromAssets(noActivationAssets)
 
 	// Asserts
-	assert.NotNil(t, emptyErr)
+	assert.Nil(t, emptyResult)
+	assert.Nil(t, emptyErr)
 	assert.NotNil(t, badTimeErr)
 	assert.NotNil(t, noLocationErr)
 	assert.NotNil(t, noActivationErr)

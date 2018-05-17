@@ -20,10 +20,10 @@ func parseSearchResults(context *Context, body []byte) ([]model.BrokerSearchResu
 	results := make([]model.BrokerSearchResult, len(planetFeatureCollection.Features))
 	for i, feature := range planetFeatureCollection.Features {
 		result, err := planetSearchBrokerResultFromFeature(feature)
-		results[i] = *result
 		if err != nil {
 			return nil, err
 		}
+		results[i] = *result
 	}
 
 	return results, nil
@@ -50,8 +50,8 @@ func planetRawBytesToFeatureCollection(context *Context, body []byte) (*geojson.
 	return planetFeatureCollection, nil
 }
 
-func planetSearchBrokerResultFromFeature(feature *geojson.Feature) (*model.BrokerSearchResult, error) {
-	acquiredDate, err := time.Parse(time.RFC3339, feature.PropertyString("acquired"))
+func basicBrokerResultFromPlanetFeature(feature *geojson.Feature, fileFormat model.BrokerFileFormat) (*model.BasicBrokerResult, error) {
+	acquiredDate, err := time.Parse(model.PlanetTimeFormat, feature.PropertyString("acquired"))
 	if err != nil {
 		return nil, err
 	}
@@ -60,23 +60,37 @@ func planetSearchBrokerResultFromFeature(feature *geojson.Feature) (*model.Broke
 		cloudCover = -1
 	}
 
-	basicBrokerResult := model.BasicBrokerResult{
+	return &model.BasicBrokerResult{
 		AcquiredDate: acquiredDate,
 		CloudCover:   cloudCover,
-		FileFormat:   model.GeoTIFF, // NOTE: all Planet results are GeoTIFF, hence this hardcoding
+		FileFormat:   fileFormat,
 		Geometry:     feature.Geometry,
 		ID:           feature.IDStr(),
 		Resolution:   feature.PropertyFloat("gsd"),
 		SensorName:   feature.PropertyString("satellite_id"),
+	}, nil
+}
+
+func planetSearchBrokerResultFromFeature(feature *geojson.Feature) (*model.BrokerSearchResult, error) {
+	// NOTE: all Planet results are GeoTIFF, hence the GeoTIFF hardcoding
+	basicBrokerResult, err := basicBrokerResultFromPlanetFeature(feature, model.GeoTIFF)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return &model.BrokerSearchResult{BasicBrokerResult: basicBrokerResult}, nil
+	return &model.BrokerSearchResult{BasicBrokerResult: *basicBrokerResult}, nil
 }
 
 // planetAssetMetadataFromAssets constructs a PlanetAssetMetadata by extracting
 // data from a planet.Assets response container
 func planetAssetMetadataFromAssets(assets Assets) (*model.PlanetAssetMetadata, error) {
-	expiresAt, err := time.Parse(time.RFC3339, assets.Analytic.ExpiresAt)
+	if assets.Analytic.Type == "" {
+		// No data means just return nil
+		return nil, nil
+	}
+
+	expiresAt, err := time.Parse(model.PlanetTimeFormat, assets.Analytic.ExpiresAt)
 	if err != nil {
 		return nil, err
 	}

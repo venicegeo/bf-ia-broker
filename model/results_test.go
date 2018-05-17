@@ -57,14 +57,14 @@ var mockLandsatS3Bands = LandsatS3Bands{
 func assertFeatureContainsBasicBrokerResult(t *testing.T, feature *geojson.Feature, result BasicBrokerResult) {
 	assert.Equal(t, result.ID, feature.IDStr())
 	assert.Equal(t, result.SensorName, feature.PropertyString("sensorName"))
-	assert.Equal(t, result.AcquiredDate.Format(time.RFC3339), feature.PropertyString("acquiredDate"))
+	assert.Equal(t, result.AcquiredDate.Format(PlanetTimeFormat), feature.PropertyString("acquiredDate"))
 	assert.Equal(t, result.CloudCover, feature.PropertyFloat("cloudCover"))
 	assert.Equal(t, result.Resolution, feature.PropertyFloat("resolution"))
 }
 
 func assertFeatureContainsPlanetAssetMetadata(t *testing.T, feature *geojson.Feature, data PlanetAssetMetadata) {
 	assert.Equal(t, data.AssetURL.String(), feature.PropertyString("location"))
-	assert.Equal(t, data.ExpiresAt.Format(time.RFC3339), feature.PropertyString("expires_at"))
+	assert.Equal(t, data.ExpiresAt.Format(PlanetTimeFormat), feature.PropertyString("expires_at"))
 	assert.Equal(t, data.Permissions, feature.PropertyStringSlice("permissions"))
 	assert.Equal(t, data.Status, feature.PropertyString("status"))
 	assert.Equal(t, data.Type, feature.PropertyString("type"))

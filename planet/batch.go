@@ -16,9 +16,11 @@ package planet
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"time"
 
+	"github.com/venicegeo/bf-ia-broker/model"
 	"github.com/venicegeo/bf-ia-broker/util"
 	"github.com/venicegeo/geojson-go/geojson"
 )
@@ -42,6 +44,8 @@ func BestScene(options SearchOptions, context *Context) (string, error) {
 	if scenes, err = GetScenes(options, context); err != nil {
 		return result, err
 	}
+	log.Print("XXXXXXXX")
+	log.Print(scenes)
 	for _, scene := range scenes.Features {
 		if result == "" {
 			result = scene.IDStr()
@@ -70,7 +74,7 @@ func scoreScene(scene *geojson.Feature, context util.LogContext) float64 {
 	minTide := scene.PropertyFloat("24hrMinTide")
 	maxTide := scene.PropertyFloat("24hrMaxTide")
 	acquiredDateString := scene.PropertyString("acquiredDate")
-	if acquiredDate, err = time.Parse(time.RFC3339, acquiredDateString); err != nil {
+	if acquiredDate, err = time.Parse(model.PlanetTimeFormat, acquiredDateString); err != nil {
 		util.LogInfo(context, fmt.Sprintf("Received invalid date of %v: ", acquiredDateString))
 		return 0.0
 	}

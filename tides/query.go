@@ -56,3 +56,7 @@ func AddTidesToSearchResults(context *Context, results []model.BrokerSearchResul
 
 	return nil
 }
+
+func GetSingleTidesData(context *Context, target model.BasicBrokerResult) (*model.TidesData, error) {
+	return nil, nil
+}

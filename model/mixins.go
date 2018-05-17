@@ -22,7 +22,7 @@ type PlanetAssetMetadata struct {
 
 // Apply implements the GeoJSONFeatureMixin interface
 func (pam PlanetAssetMetadata) Apply(feature *geojson.Feature) error {
-	feature.Properties["expires_at"] = pam.ExpiresAt.Format(time.RFC3339)
+	feature.Properties["expires_at"] = pam.ExpiresAt.Format(PlanetTimeFormat)
 	feature.Properties["location"] = pam.AssetURL.String()
 	feature.Properties["permissions"] = pam.Permissions
 	feature.Properties["status"] = pam.Status

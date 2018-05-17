@@ -135,16 +135,7 @@ func (h DiscoverHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		Tides:           tides,
 		Bbox:            bbox}
 
-	if fc, err = GetScenes(options, &h.Context); err == nil {
-		if bytes, err = geojson.Write(fc); err != nil {
-			err = util.LogSimpleErr(&h.Context, fmt.Sprintf("Failed to write output GeoJSON from:\n%#v", fc), err)
-			util.HTTPError(request, writer, &h.Context, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		writer.Header().Set("Content-Type", "application/json")
-		writer.Write(bytes)
-		util.LogAudit(&h.Context, util.LogAuditInput{Actor: "anon user", Action: request.Method + " response", Actee: request.URL.String(), Message: "Sending /discover response", Severity: util.INFO})
-	} else {
+	if fc, err = GetScenes(options, &h.Context); err != nil {
 		switch herr := err.(type) {
 		case util.HTTPErr:
 			util.HTTPError(request, writer, &h.Context, herr.Message, herr.Status)
@@ -153,6 +144,16 @@ func (h DiscoverHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 			util.HTTPError(request, writer, &h.Context, err.Error(), http.StatusInternalServerError)
 		}
 	}
+
+	if bytes, err = geojson.Write(fc); err != nil {
+		err = util.LogSimpleErr(&h.Context, fmt.Sprintf("Failed to write output GeoJSON from:\n%#v", fc), err)
+		util.HTTPError(request, writer, &h.Context, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writer.Header().Set("Content-Type", "application/json")
+	writer.Write(bytes)
+	util.LogAudit(&h.Context, util.LogAuditInput{Actor: "anon user", Action: request.Method + " response", Actee: request.URL.String(), Message: "Sending /discover response", Severity: util.INFO})
+
 }
 
 // MetadataHandler is a handler for /planet
@@ -191,7 +192,6 @@ func (h MetadataHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		feature *geojson.Feature
 		bytes   []byte
 		options MetadataOptions
-		asset   Asset
 	)
 
 	util.LogAudit(&h.Context, util.LogAuditInput{Actor: "anon user", Action: request.Method, Actee: request.URL.String(), Message: "Receiving /planet/{itemType}/{id} request", Severity: util.INFO})
@@ -237,28 +237,7 @@ func (h MetadataHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		return
 	}
 
-	if feature, err = GetMetadata(options, &h.Context); err == nil {
-		if asset, err = GetAsset(options, &h.Context); err == nil {
-			injectAssetIntoMetadata(feature, asset)
-			if bytes, err = geojson.Write(feature); err != nil {
-				err = util.LogSimpleErr(&h.Context, fmt.Sprintf("Failed to write output GeoJSON from:\n%#v", feature), err)
-				util.HTTPError(request, writer, &h.Context, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			writer.Header().Set("Content-Type", "application/json")
-			writer.Write(bytes)
-
-			util.LogAudit(&h.Context, util.LogAuditInput{Actor: request.URL.String(), Action: request.Method + " response", Actee: "anon user", Message: "Sending planet/{itemType}/{id} response", Severity: util.INFO})
-		} else {
-			switch herr := err.(type) {
-			case util.HTTPErr:
-				util.HTTPError(request, writer, &h.Context, herr.Message, herr.Status)
-			default:
-				err = util.LogSimpleErr(&h.Context, "Failed to get Planet Labs asset information. ", err)
-				util.HTTPError(request, writer, &h.Context, err.Error(), 0)
-			}
-		}
-	} else {
+	if feature, err = GetItemWithAssetMetadata(&h.Context, options); err != nil {
 		switch herr := err.(type) {
 		case util.HTTPErr:
 			util.HTTPError(request, writer, &h.Context, herr.Message, herr.Status)
@@ -267,6 +246,16 @@ func (h MetadataHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 			util.HTTPError(request, writer, &h.Context, err.Error(), 0)
 		}
 	}
+
+	if bytes, err = geojson.Write(feature); err != nil {
+		err = util.LogSimpleErr(&h.Context, fmt.Sprintf("Failed to write output GeoJSON from:\n%#v", feature), err)
+		util.HTTPError(request, writer, &h.Context, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writer.Header().Set("Content-Type", "application/json")
+	writer.Write(bytes)
+
+	util.LogAudit(&h.Context, util.LogAuditInput{Actor: request.URL.String(), Action: request.Method + " response", Actee: "anon user", Message: "Sending planet/{itemType}/{id} response", Severity: util.INFO})
 }
 
 // ActivateHandler is a handler for /planet

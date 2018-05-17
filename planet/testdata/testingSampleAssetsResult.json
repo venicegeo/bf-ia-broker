@@ -8,7 +8,7 @@
         "_permissions": [
             "download"
         ],
-        "expires_at": "2017-04-19T17:27:58.667829",
+        "expires_at": "2017-04-19T17:27:58.667829Z",
         "location": "https://api.planet.com/data/v1/download?token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0V3JkK0ZOVVRqekV1a3M4dVcwUDRhWE1CeU5xNXRST216ZTZNcllJSm1nL2Y0Y2wrQ0ZwMzBCRDdzcksrL1BHdXozM3RWVmVPOG5OR1grWTB0T2Zrdz09IiwiaXRlbV90eXBlX2lkIjoiUkVPcnRob1RpbGUiLCJ0b2tlbl90eXBlIjoidHlwZWQtaXRlbSIsImV4cCI6MTQ5MjYyMjg3OCwiaXRlbV9pZCI6IjIwMTYwNzA3XzE5NTE0N18xMDU3OTE2X1JhcGlkRXllLTEiLCJhc3NldF90eXBlIjoiYW5hbHl0aWMifQ.A1XwFjiT9Qnt-MSQS-I0Xoslb0G1TdI8o8EUu7M0QN4SpwwuiD6aGcyDNXXZ9DlIHPOcjb8LEgSmDl5HnTbQ9w",
         "md5_digest": "98ef8fea7f91d66c2a7cd8ce02af25ae",
         "status": "active",
@@ -23,7 +23,7 @@
         "_permissions": [
             "download"
         ],
-        "expires_at": "2017-04-19T17:27:58.669572",
+        "expires_at": "2017-04-19T17:27:58.669572Z",
         "location": "https://api.planet.com/data/v1/download?token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzK2pzRW9odVBBdnlHR1d4M1ZhYVFzeGgwaHFlRTdSa3pva1hhcU5WRERpUGlPd2NoRW9INEMzODhmc21ncktRZitaQVhaRElHSjJNNVh1RFhuUmpWUT09IiwiaXRlbV90eXBlX2lkIjoiUkVPcnRob1RpbGUiLCJ0b2tlbl90eXBlIjoidHlwZWQtaXRlbSIsImV4cCI6MTQ5MjYyMjg3OCwiaXRlbV9pZCI6IjIwMTYwNzA3XzE5NTE0N18xMDU3OTE2X1JhcGlkRXllLTEiLCJhc3NldF90eXBlIjoiYW5hbHl0aWNfeG1sIn0.d8P10y966bMQQWrGC9kV8rcFuUqBO6hVU6Y7QC6w9sMDf6VfZw1prc73VH-BYb13lWHBjq59_2BYzwTVLYVV4w",
         "md5_digest": "f61a7e79faf939aa97222e5844c00556",
         "status": "active",
@@ -38,7 +38,7 @@
         "_permissions": [
             "download"
         ],
-        "expires_at": "2017-04-19T17:27:58.671199",
+        "expires_at": "2017-04-19T17:27:58.671199Z",
         "location": "https://api.planet.com/data/v1/download?token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzVTVkV0Z5L0xxZlU1elliOXdMOUFwQnZIbXk5MU9hSVNDRERJVjRFbndjSHN6V2lMRk9HRktMRFlGNVFHcTV4ekNzdHlMMW5wM3RIelp0VmU3SnJjQT09IiwiaXRlbV90eXBlX2lkIjoiUkVPcnRob1RpbGUiLCJ0b2tlbl90eXBlIjoidHlwZWQtaXRlbSIsImV4cCI6MTQ5MjYyMjg3OCwiaXRlbV9pZCI6IjIwMTYwNzA3XzE5NTE0N18xMDU3OTE2X1JhcGlkRXllLTEiLCJhc3NldF90eXBlIjoidWRtIn0.wpGmfSTsECqjazQ1koskmjJX1Bi6xJN5PculKZYFPsnBDnmjyeGszg_Wm2xTNmO8Xb-spMD2aQ4oN_KYClGfmg",
         "md5_digest": "ef98dd6c2f8120d14220c1ea747dafb2",
         "status": "active",
@@ -53,7 +53,7 @@
         "_permissions": [
             "download"
         ],
-        "expires_at": "2017-04-19T17:27:58.668752",
+        "expires_at": "2017-04-19T17:27:58.668752Z",
         "location": "https://api.planet.com/data/v1/download?token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1dkpRVjUrOGswV2hjdHNyWThkU2V1WUNDQWw3UjBJNkZtNGExNVo5Vi8zSXB3bUlTeU51bjk4T294VDBkYXFOdTNZSnhGR0ZLVFlLSGZNbHJwaHdGdz09IiwiaXRlbV90eXBlX2lkIjoiUkVPcnRob1RpbGUiLCJ0b2tlbl90eXBlIjoidHlwZWQtaXRlbSIsImV4cCI6MTQ5MjYyMjg3OCwiaXRlbV9pZCI6IjIwMTYwNzA3XzE5NTE0N18xMDU3OTE2X1JhcGlkRXllLTEiLCJhc3NldF90eXBlIjoidmlzdWFsIn0.4MQOXS2Wkt7de4pQdSKWOHK9GKVxF7PIDSnBcq1twUfm0qLiX4MH1GlYILfcU2ohba3NzLoGtZH0Qq5HaBe4pw",
         "md5_digest": "e1a38bbc5599c8c601a2fcc14d0ba9b3",
         "status": "active",
@@ -68,7 +68,7 @@
         "_permissions": [
             "download"
         ],
-        "expires_at": "2017-04-19T17:27:58.670397",
+        "expires_at": "2017-04-19T17:27:58.670397Z",
         "location": "https://api.planet.com/data/v1/download?token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJaU0VOTEszS2lWZENVS0lwYVczSVNCOElnalRkeHNJcDRjY2Z3WERsV1JnTDM1a2JGMkIvMkNwWUdaMGM2YkxKUnJtWVE5VEYrOXJoc0JGZkJIVWpYUT09IiwiaXRlbV90eXBlX2lkIjoiUkVPcnRob1RpbGUiLCJ0b2tlbl90eXBlIjoidHlwZWQtaXRlbSIsImV4cCI6MTQ5MjYyMjg3OCwiaXRlbV9pZCI6IjIwMTYwNzA3XzE5NTE0N18xMDU3OTE2X1JhcGlkRXllLTEiLCJhc3NldF90eXBlIjoidmlzdWFsX3htbCJ9.9TqxXpJ7fjh4RepLVsXKBwfmL7-uq7uEW80uJB211yLiXMqwMxoy00bqOKMlYM4YkxlnU_9gTs7p52kJPZ1FdQ",
         "md5_digest": "228c273c485368dc3a17cc0777346c91",
         "status": "active",
