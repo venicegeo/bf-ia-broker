@@ -161,6 +161,9 @@ func populateWRSPaths(tx *sql.Tx) error {
 					), 4326)
 					))
 		`)
+	if err != nil {
+		return err
+	}
 
 	strReader := strings.NewReader(wrsCornerPointsCSV)
 	reader := csv.NewReader(strReader)
