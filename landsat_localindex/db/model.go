@@ -1,11 +1,15 @@
 package db
 
-import "time"
+import (
+	"time"
+
+	"github.com/venicegeo/geojson-go/geojson"
+)
 
 type LandsatLocalIndexScene struct {
 	ProductID       string
 	AcquisitionDate time.Time
 	CloudCover      float64
 	SceneURLString  string
-	Bounds          []byte
+	Bounds          *geojson.Polygon
 }
