@@ -3,6 +3,8 @@ package landsatlocalindex
 import (
 	"database/sql"
 
+	"github.com/venicegeo/bf-ia-broker/landsat_localindex/db"
+	"github.com/venicegeo/bf-ia-broker/model"
 	"github.com/venicegeo/bf-ia-broker/util"
 )
 
@@ -29,4 +31,30 @@ func (c *Context) SessionID() string {
 // LogRootDir returns an empty string
 func (c *Context) LogRootDir() string {
 	return ""
+}
+
+func indexedLandsatBrokerResultFromBrokerSearchResult(original model.BrokerSearchResult, sceneURLString string) (*model.IndexedLandsatBrokerResult, error) {
+	result := model.IndexedLandsatBrokerResult{BasicBrokerResult: original.BasicBrokerResult, TidesData: original.TidesData}
+
+	bands, err := model.NewLandsatS3Bands(sceneURLString, result.BasicBrokerResult.ID)
+	if err != nil {
+		return nil, err
+	}
+	result.LandsatS3Bands = *bands
+
+	return &result, nil
+}
+
+func brokerSearchResultFromScene(scene db.LandsatLocalIndexScene) model.BrokerSearchResult {
+	return model.BrokerSearchResult{
+		BasicBrokerResult: model.BasicBrokerResult{
+			ID:           scene.ProductID,
+			AcquiredDate: scene.AcquisitionDate,
+			CloudCover:   scene.CloudCover,
+			Resolution:   0,              // No data available for this
+			SensorName:   "Landsat8L1TP", // XXX: hardcoded
+			FileFormat:   model.GeoTIFF,
+			Geometry:     scene.Bounds,
+		},
+	}
 }

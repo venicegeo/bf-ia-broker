@@ -14,30 +14,21 @@ func getMetadata(tx *sql.Tx, ctx Context, sceneID string, withTides bool) (model
 		return nil, err
 	}
 
-	result := model.IndexedLandsatBrokerResult{}
-	result.BasicBrokerResult = model.BasicBrokerResult{
-		ID:           scene.ProductID,
-		AcquiredDate: scene.AcquisitionDate,
-		CloudCover:   scene.CloudCover,
-		Resolution:   0,              // No data available for this
-		SensorName:   "Landsat8L1TP", // XXX: hardcoded
-		FileFormat:   model.GeoTIFF,
-		Geometry:     scene.Bounds,
-	}
-
-	bands, err := model.NewLandsatS3Bands(scene.SceneURLString, sceneID)
-	if err != nil {
-		return nil, err
-	}
-	result.LandsatS3Bands = *bands
+	searchResult := brokerSearchResultFromScene(*scene)
 
 	if withTides {
 		tidesContext := &tides.Context{TidesURL: ctx.BaseTidesURL}
-		if tidesData, err := tides.GetSingleTidesData(tidesContext, result.BasicBrokerResult); err == nil {
-			result.TidesData = tidesData
+		inPlaceEditableSearchResults := []model.BrokerSearchResult{searchResult}
+		if err = tides.AddTidesToSearchResults(tidesContext, inPlaceEditableSearchResults); err == nil {
+			searchResult = inPlaceEditableSearchResults[0]
 		} else {
 			return nil, err
 		}
+	}
+
+	result, err := indexedLandsatBrokerResultFromBrokerSearchResult(searchResult, scene.SceneURLString)
+	if err != nil {
+		return nil, err
 	}
 
 	return result, nil

@@ -2,12 +2,15 @@ package landsatlocalindex
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/venicegeo/bf-ia-broker/landsat_localindex/db"
 	"github.com/venicegeo/bf-ia-broker/util"
+	"github.com/venicegeo/geojson-go/geojson"
 )
 
 // DiscoverHandler is a handler for /localindex/discover/landsat
@@ -48,23 +51,72 @@ func NewDiscoverHandler(connectionProvider db.ConnectionProvider) (*DiscoverHand
 func (h DiscoverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	tx, err := h.Context.DB.Begin()
 	if err != nil {
-		util.HTTPError(r, w, &h.Context, "Could not begin DB transaction: "+err.Error(), http.StatusInternalServerError)
+		message := fmt.Sprintf("Could not begin DB transaction: %v", err)
+		util.LogSimpleErr(&h.Context, message, err)
+		util.HTTPError(r, w, &h.Context, message, http.StatusInternalServerError)
 		return
 	}
 	defer tx.Commit()
 
-	scene, err := db.GetSceneByID(tx, "LC08_L1TP_012029_20170411_20170415_01_T1")
-	if err == sql.ErrNoRows {
-		util.HTTPError(r, w, &h.Context, "Scene not found", http.StatusNotFound)
+	tides, _ := strconv.ParseBool(r.FormValue("tides"))
+	bbox, err := geojson.NewBoundingBox(r.FormValue("bbox"))
+	if err != nil {
+		message := fmt.Sprintf("The bbox value of %v is invalid", r.FormValue("bbox"))
+		util.LogSimpleErr(&h.Context, message, err)
+		util.HTTPError(r, w, &h.Context, message, http.StatusBadRequest)
+		tx.Rollback()
 		return
 	}
+	maxCloudCover := float64(1)
+	if r.FormValue("cloudCover") != "" {
+		if maxCloudCover, err = strconv.ParseFloat(r.FormValue("cloudCover"), 64); err != nil {
+			message := fmt.Sprintf("Cloud Cover value of %v is invalid.", r.FormValue("cloudCover"))
+			util.LogSimpleErr(&h.Context, message, err)
+			util.HTTPError(r, w, &h.Context, message, http.StatusBadRequest)
+			tx.Rollback()
+			return
+		}
+		maxCloudCover = maxCloudCover / 100.0
+	}
+	minAcquiredDate := time.Unix(0, 0)
+	if r.FormValue("acquiredDate") != "" {
+		if minAcquiredDate, err = time.Parse(time.RFC3339, r.FormValue("acquiredDate")); err != nil {
+			message := fmt.Sprintf("Acquired date value of %v is invalid.", r.FormValue("acquiredDate"))
+			util.LogSimpleErr(&h.Context, message, err)
+			util.HTTPError(r, w, &h.Context, message, http.StatusBadRequest)
+			tx.Rollback()
+			return
+		}
+	}
+	maxAcquiredDate := time.Now()
+	if r.FormValue("maxAcquiredDate") != "" {
+		if maxAcquiredDate, err = time.Parse(time.RFC3339, r.FormValue("maxAcquiredDate")); err != nil {
+			message := fmt.Sprintf("Acquired date value of %v is invalid.", r.FormValue("maxAcquiredDate"))
+			util.LogSimpleErr(&h.Context, message, err)
+			util.HTTPError(r, w, &h.Context, message, http.StatusBadRequest)
+			tx.Rollback()
+			return
+		}
+	}
+
+	multiResult, err := discoverScenes(tx, h.Context, bbox, maxCloudCover, minAcquiredDate, maxAcquiredDate, tides)
+
 	if err != nil {
-		util.HTTPError(r, w, &h.Context, "DB error searching for scene: "+err.Error(), http.StatusInternalServerError)
+		message := fmt.Sprintf("Error searching for scenes: %v", err)
+		util.LogSimpleErr(&h.Context, message, err)
+		util.HTTPError(r, w, &h.Context, message, http.StatusInternalServerError)
 		tx.Rollback()
 		return
 	}
 
-	w.Write([]byte(scene.SceneURLString))
+	featureCollection, err := multiResult.GeoJSONFeatureCollection()
+	if err != nil {
+		message := fmt.Sprintf("Error converting to feature collection: %v", err)
+		util.LogSimpleErr(&h.Context, message, err)
+		util.HTTPError(r, w, &h.Context, message, http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte(featureCollection.String()))
 }
 
 // MetadataHandler is a handler for /localindex/landsat/{id}
@@ -100,13 +152,17 @@ func NewMetadataHandler(connectionProvider db.ConnectionProvider) (*MetadataHand
 func (h MetadataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	sceneID, ok := mux.Vars(r)["id"]
 	if !ok {
-		util.HTTPError(r, w, &h.Context, "Scene not found", http.StatusNotFound)
+		message := "No scene ID found in URL"
+		util.LogAlert(&h.Context, message)
+		util.HTTPError(r, w, &h.Context, message, http.StatusNotFound)
 		return
 	}
 
 	tx, err := h.Context.DB.Begin()
 	if err != nil {
-		util.HTTPError(r, w, &h.Context, "Could not begin DB transaction: "+err.Error(), http.StatusInternalServerError)
+		message := fmt.Sprintf("Could not begin DB transaction: %v", err)
+		util.LogSimpleErr(&h.Context, message, err)
+		util.HTTPError(r, w, &h.Context, message, http.StatusInternalServerError)
 		return
 	}
 	defer tx.Commit()
@@ -115,18 +171,25 @@ func (h MetadataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	metadata, err := getMetadata(tx, h.Context, sceneID, tides)
 	if err == sql.ErrNoRows {
-		util.HTTPError(r, w, &h.Context, "Scene not found", http.StatusNotFound)
+		message := fmt.Sprintf("Scene not found: %s", sceneID)
+		util.LogInfo(&h.Context, message)
+		util.HTTPError(r, w, &h.Context, message, http.StatusNotFound)
+		tx.Rollback()
 		return
 	}
 	if err != nil {
-		util.HTTPError(r, w, &h.Context, "DB error searching for scene: "+err.Error(), http.StatusInternalServerError)
+		message := fmt.Sprintf("Server error searching for scene: %v", err)
+		util.LogSimpleErr(&h.Context, message, err)
+		util.HTTPError(r, w, &h.Context, message, http.StatusInternalServerError)
 		tx.Rollback()
 		return
 	}
 
 	feature, err := metadata.GeoJSONFeature()
 	if err != nil {
-		util.HTTPError(r, w, &h.Context, "Error converting metadata to GeoJSON: "+err.Error(), http.StatusInternalServerError)
+		message := fmt.Sprintf("Error converting metadata to geojson: %v", err)
+		util.LogSimpleErr(&h.Context, message, err)
+		util.HTTPError(r, w, &h.Context, message, http.StatusInternalServerError)
 		tx.Rollback()
 		return
 	}
@@ -161,24 +224,33 @@ func NewXYZTileHandler(connectionProvider db.ConnectionProvider) (*XYZTileHandle
 func (h XYZTileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	sceneID, ok := mux.Vars(r)["id"]
 	if !ok {
-		util.HTTPError(r, w, &h.Context, "Scene not found", http.StatusNotFound)
+		message := "No scene ID found in URL"
+		util.LogAlert(&h.Context, message)
+		util.HTTPError(r, w, &h.Context, message, http.StatusNotFound)
 		return
 	}
 
 	tx, err := h.Context.DB.Begin()
 	if err != nil {
-		util.HTTPError(r, w, &h.Context, "Could not begin DB transaction: "+err.Error(), http.StatusInternalServerError)
+		message := fmt.Sprintf("Could not begin DB transaction: %v", err)
+		util.LogSimpleErr(&h.Context, message, err)
+		util.HTTPError(r, w, &h.Context, message, http.StatusInternalServerError)
 		return
 	}
 	defer tx.Commit()
 
 	thumbURL, err := getThumbURLForSceneID(tx, sceneID)
 	if err == sql.ErrNoRows {
-		util.HTTPError(r, w, &h.Context, "Scene not found", http.StatusNotFound)
+		message := fmt.Sprintf("Scene not found: %s", sceneID)
+		util.LogInfo(&h.Context, message)
+		util.HTTPError(r, w, &h.Context, message, http.StatusNotFound)
+		tx.Rollback()
 		return
 	}
 	if err != nil {
-		util.HTTPError(r, w, &h.Context, "DB error searching for scene: "+err.Error(), http.StatusInternalServerError)
+		message := fmt.Sprintf("Server error searching for scene: %v", err)
+		util.LogSimpleErr(&h.Context, message, err)
+		util.HTTPError(r, w, &h.Context, message, http.StatusInternalServerError)
 		tx.Rollback()
 		return
 	}
