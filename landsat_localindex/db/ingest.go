@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	csvcolumnmap "github.com/venicegeo/bf-ia-broker/landsat_selfindex/db/csvColumnMap"
+	csvcolumnmap "github.com/venicegeo/bf-ia-broker/landsat_localindex/db/csvColumnMap"
 )
 
 //BeginIngestJobMessage is sent on a channel to start an ingest job.

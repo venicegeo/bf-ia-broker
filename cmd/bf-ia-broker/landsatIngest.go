@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,14 +10,13 @@ import (
 
 	"github.com/gorilla/mux"
 
-	db "github.com/venicegeo/bf-ia-broker/landsat_selfindex/db"
+	db "github.com/venicegeo/bf-ia-broker/landsat_localindex/db"
 
 	_ "github.com/lib/pq"
 	cli "gopkg.in/urfave/cli.v1"
 )
 
-const connectionStringEnv = "postgresConnectionString"
-const scenesFileEnv = "scenesCsvUrl"
+const scenesFileEnv = "LANDSAT_INDEX_SCENES_URL"
 const ingestFrequencyEnv = "ingest_frequency"
 const defaultIngestFrequency = 24 * time.Hour
 
@@ -28,7 +26,7 @@ func landsatIngestAction(*cli.Context) {
 
 	scenesURL := os.Getenv(scenesFileEnv)
 	scenesIsGzip := strings.HasSuffix(strings.ToLower(scenesURL), "gz")
-	importer := db.NewImporter(scenesURL, scenesIsGzip, getDbConnection)
+	importer := db.NewImporter(scenesURL, scenesIsGzip, getDbConnectionFunc)
 
 	//Create the channel that sends the star/stop messages to the Importer.
 	messageChan := make(chan string, 5) //small buffer.
@@ -77,22 +75,6 @@ func handleCancel(imp *db.Importer, cancelChan chan<- string, writer http.Respon
 		fmt.Fprintln(writer, "Error submitting cancel request.")
 	}
 	fmt.Fprintln(writer, imp.GetStatus())
-}
-
-//getDbConnection opens a new database connection.
-func getDbConnection() (*sql.DB, error) {
-	connStr := os.Getenv(connectionStringEnv)
-
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = db.Ping(); err != nil {
-		return nil, err
-	}
-
-	return db, err
 }
 
 func getTimerDuration() time.Duration {

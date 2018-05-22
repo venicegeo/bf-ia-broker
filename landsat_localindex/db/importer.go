@@ -11,10 +11,12 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/venicegeo/bf-ia-broker/util"
 )
 
 //ConnectionProvider is a function that can provide a database connection.
-type ConnectionProvider func() (*sql.DB, error)
+type ConnectionProvider func(util.LogContext) (*sql.DB, error)
 
 //Importer manages the state for an ingest job.
 type Importer struct {
@@ -142,7 +144,7 @@ func (imp *Importer) Import(messageChan <-chan string) (result string) {
 
 	//Database connection is opened right before the ingest, and closed
 	//immediately after.
-	database, err := imp.dbConnProvider()
+	database, err := imp.dbConnProvider(&util.BasicLogContext{})
 	if err != nil {
 		log.Fatal("Could not open database connection.")
 	}

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	landsatlocalindex "github.com/venicegeo/bf-ia-broker/landsat_localindex"
 	landsat "github.com/venicegeo/bf-ia-broker/landsat_planet"
 	"github.com/venicegeo/bf-ia-broker/planet"
 	"github.com/venicegeo/bf-ia-broker/util"
@@ -35,8 +36,8 @@ func getPortStr() string {
 	return ":8080"
 }
 
-func createRouter(ctx util.LogContext) (router *mux.Router) {
-	router = mux.NewRouter()
+func createRouter(ctx util.LogContext) (*mux.Router, error) {
+	router := mux.NewRouter()
 	router.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		util.LogAudit(ctx, util.LogAuditInput{Actor: "anon user", Action: request.Method, Actee: request.URL.String(), Message: "Receiving / request", Severity: util.INFO})
 		writer.Write([]byte("Hi"))
@@ -45,7 +46,26 @@ func createRouter(ctx util.LogContext) (router *mux.Router) {
 	router.Handle("/planet/discover/{itemType}", planet.NewDiscoverHandler())
 	router.Handle("/planet/{itemType}/{id}", planet.NewMetadataHandler())
 	router.Handle("/planet/activate/{itemType}/{id}", planet.NewActivateHandler())
-	return
+
+	if landsatLocalDiscoverHandler, err := landsatlocalindex.NewDiscoverHandler(getDbConnectionFunc); err == nil {
+		router.Handle("/localindex/discover/landsat", landsatLocalDiscoverHandler)
+	} else {
+		return nil, err
+	}
+
+	if landsatLocalMetadataHandler, err := landsatlocalindex.NewMetadataHandler(getDbConnectionFunc); err == nil {
+		router.Handle("/localindex/landsat/{id}", landsatLocalMetadataHandler)
+	} else {
+		return nil, err
+	}
+
+	if landsatLocalXYZTileHandler, err := landsatlocalindex.NewXYZTileHandler(getDbConnectionFunc); err == nil {
+		router.Handle("/localindex/tiles/landsat/{id}/{Z}/{X}/{Y}.jpg", landsatLocalXYZTileHandler)
+	} else {
+		return nil, err
+	}
+
+	return router, nil
 }
 
 func serveAction(*cli.Context) {
@@ -59,7 +79,12 @@ func serveAction(*cli.Context) {
 	} else {
 		util.LogAlert(logContext, "No Landsat host found, not starting Landsat scene list query loop")
 	}
-	launchServerFunc(portStr, createRouter(logContext))
+
+	if router, err := createRouter(logContext); err == nil {
+		launchServerFunc(portStr, router)
+	} else {
+		util.LogSimpleErr(logContext, "Failed to create router: ", err)
+	}
 }
 
 var launchServerFunc = launchServer

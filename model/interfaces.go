@@ -11,6 +11,9 @@ const GeoTIFF BrokerFileFormat = "geotiff"
 // JPEG2000 corresponds to .JP2 files
 const JPEG2000 BrokerFileFormat = "jpeg2000"
 
+// JPEG corresponds to .JPG or .JPEG files
+const JPEG BrokerFileFormat = "jpeg"
+
 // GeoJSONFeatureCreator is an interface for data that can convert itself to a GeoJSON feature
 type GeoJSONFeatureCreator interface {
 	GeoJSONFeature() (*geojson.Feature, error)
