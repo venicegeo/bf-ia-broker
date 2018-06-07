@@ -48,19 +48,19 @@ func createRouter(ctx util.LogContext) (*mux.Router, error) {
 	router.Handle("/planet/activate/{itemType}/{id}", planet.NewActivateHandler())
 
 	if landsatLocalDiscoverHandler, err := landsatlocalindex.NewDiscoverHandler(getDbConnectionFunc); err == nil {
-		router.Handle("/localindex/discover/landsat", landsatLocalDiscoverHandler)
+		router.Handle("/localindex/discover/landsat_pds", landsatLocalDiscoverHandler)
 	} else {
 		return nil, err
 	}
 
 	if landsatLocalMetadataHandler, err := landsatlocalindex.NewMetadataHandler(getDbConnectionFunc); err == nil {
-		router.Handle("/localindex/landsat/{id}", landsatLocalMetadataHandler)
+		router.Handle("/localindex/landsat_pds/{id}", landsatLocalMetadataHandler)
 	} else {
 		return nil, err
 	}
 
 	if landsatLocalXYZTileHandler, err := landsatlocalindex.NewXYZTileHandler(getDbConnectionFunc); err == nil {
-		router.Handle("/localindex/tiles/landsat/{id}/{Z}/{X}/{Y}.jpg", landsatLocalXYZTileHandler)
+		router.Handle("/localindex/tiles/landsat_pds/{id}/{Z}/{X}/{Y}.jpg", landsatLocalXYZTileHandler)
 	} else {
 		return nil, err
 	}
