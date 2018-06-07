@@ -37,7 +37,7 @@ node() {
           // Get the name of the current running IA-Broker application
           def appName = sh(script: "cf apps | grep 'bf-ia-broker' | cut -f1 -d ' ' ", returnStdout: true).trim()
           // Run the Ingest Task
-          sh "cf run-task ${appName} './bf-ia-broker.bin landsat-ingest' -k 512M -m 1G"
+          sh "cf run-task ${appName} './bf-ia-broker.bin landsat_ingest' -k 512M -m 1G"
         }
       }
     }
