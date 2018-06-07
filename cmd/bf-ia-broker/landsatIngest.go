@@ -20,8 +20,14 @@ const scenesFileEnv = "LANDSAT_INDEX_SCENES_URL"
 const ingestFrequencyEnv = "ingest_frequency"
 const defaultIngestFrequency = 24 * time.Hour
 
+//calls the ingest worker a single time without scheduling
+func landsatIngestOnceAction(*cli.Context) {
+	//Start the sleep/ingest loop.
+	go importer.Import(nil)
+}
+
 //landsatIngestAction starts the worker process and an http server
-func landsatIngestAction(*cli.Context) {
+func landsatIngestScheduleAction(*cli.Context) {
 	portStr := getPortStr()
 
 	scenesURL := os.Getenv(scenesFileEnv)

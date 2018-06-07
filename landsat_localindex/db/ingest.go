@@ -97,10 +97,12 @@ func (imp *Importer) ingest(
 CSVLoop:
 	for {
 		//Check whether the user has requested cancelation.
-		if abort := drainMessages(cancelChan); abort {
-			log.Println("Ingest job canceld by user.")
-			stats.CanceledByUser = true
-			break CSVLoop
+		if (cancelChan != nil) {
+			if abort := drainMessages(cancelChan); abort {
+				log.Println("Ingest job canceld by user.")
+				stats.CanceledByUser = true
+				break CSVLoop
+			}
 		}
 
 		//Report the status to anyone waiting for it.
