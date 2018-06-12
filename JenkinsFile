@@ -58,17 +58,22 @@ node {
 			  cf set-env ${deployAppName} PL_API_URL ${env.PL_API_URL}
 			  cf set-env ${deployAppName} SENTINEL_HOST ${env.SENTINEL_HOST}
 			  cf set-env ${deployAppName} BF_TIDE_PREDICTION_URL ${tidesUrl}
-        cf set-env ${deployAppName} LANDSAT_INDEX_SCENES_URL XXX-TODO-FILL-THIS
-        cf set-env ${deployAppName} LANDSAT_INGEST_FREQUENCY XXX-TODO-FILL-THIS-DEFAULT-24H
+        cf set-env ${deployAppName} LANDSAT_INDEX_SCENES_URL ${env.LANDSAT_INDEX_SCENES_URL}
+        cf set-env ${deployAppName} LANDSAT_INGEST_FREQUENCY ${env.LANDSAT_INGEST_FREQUENCY}
 			"""
+
+      echo "Running database migration"
+      sh "cf run-task ${deployAppName} './bf-ia-broker.bin migrate'"
+
+      echo "Migration successful, starting app"
 			sh "cf start ${deployAppName}"
-        } catch (Exception e) {
-          printLogsFailsafe deployAppName
-          sh "cf delete ${deployAppName} -f"
-          error("Error during application start. Deleting ${deployAppName} and failing the build.")
-        }
-      }
+    } catch (Exception e) {
+      printLogsFailsafe deployAppName
+      sh "cf delete ${deployAppName} -f"
+      error("Error during application start. Deleting ${deployAppName} and failing the build.")
     }
+  }
+}
 
     if(!env.SKIP_SCANS.toBoolean()) {
       withCredentials([[$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: "THREADFIX_KEY"]]) {
