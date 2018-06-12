@@ -165,8 +165,8 @@ node {
         find . -maxdepth 1 -mindepth 1 -not -name gopath -exec cp -R '{}' gopath/src/github.com/venicegeo/bf-ia-broker/ \\;
         cd "\$GOPATH/src/github.com/venicegeo/bf-ia-broker"
         go install github.com/venicegeo/bf-ia-broker/cmd/bf-ia-broker
-        cd landsat
-        go test -v -coverprofile=${root}/landsat.cov
+        cd landsat_planet
+        go test -v -coverprofile=${root}/landsat_planet.cov
         cd ..
         cd planet
         go test -v -coverprofile=${root}/planet.cov
@@ -178,7 +178,7 @@ node {
         go test -v -coverprofile=${root}/util.cov
         cd ..
         cd ${root}
-        go tool cover -func=landsat.cov -o landsat.cov.txt
+        go tool cover -func=landsat_planet.cov -o landsat_planet.cov.txt
         go tool cover -func=planet.cov -o planet.cov.txt
         go tool cover -func=tides.cov -o tides.cov.txt
         go tool cover -func=util.cov -o util.cov.txt
