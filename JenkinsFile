@@ -62,6 +62,9 @@ node {
         cf set-env ${deployAppName} LANDSAT_INGEST_FREQUENCY ${env.LANDSAT_INGEST_FREQUENCY}
 			"""
 
+      echo "Staging application"
+      sh "cf push ${deployAppName}"
+
       echo "Running database migration"
       sh "cf run-task ${deployAppName} './bf-ia-broker.bin migrate'"
 
