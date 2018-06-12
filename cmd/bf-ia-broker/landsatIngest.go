@@ -27,7 +27,7 @@ func landsatIngestOnceAction(*cli.Context) {
 	importer := db.NewImporter(scenesURL, scenesIsGzip, getDbConnectionFunc)
 
 	//Start the sleep/ingest loop.
-	go importer.Import(nil)
+	importer.Import(nil)
 }
 
 //landsatIngestAction starts the worker process and an http server
