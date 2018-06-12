@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/venicegeo/bf-ia-broker/util"
@@ -23,7 +24,8 @@ func getDbConnection(ctx util.LogContext) (*sql.DB, error) {
 		}
 		service := services.FindServiceByName(pzPostgresService)
 		if service == nil {
-			return nil, errors.New("Could not get DB connection from DATABASE_URL or VCAP_SERVICES ('pz-postgres' service not found)")
+			return nil, fmt.Errorf("Could not get DB connection from DATABASE_URL or VCAP_SERVICES ('pz-postgres' service not found); available services: %v",
+				services.GetServiceNames())
 		}
 		connStr, err = service.Credentials.String("uri")
 		if err != nil {

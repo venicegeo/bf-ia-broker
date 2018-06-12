@@ -27,6 +27,17 @@ func (s VcapServices) FindServiceByName(name string) *VcapService {
 	return nil
 }
 
+// GetServiceNames traverses VCAP and gets all available service names
+func (s VcapServices) GetServiceNames() []string {
+	names := []string{}
+	for _, serviceArray := range s {
+		for _, service := range serviceArray {
+			names = append(names, service.Name)
+		}
+	}
+	return names
+}
+
 // VcapService is a parsed individual VCAP service; not all fields are parsed here
 type VcapService struct {
 	Name        string          `json:"name"`
