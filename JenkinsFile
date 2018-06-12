@@ -62,8 +62,8 @@ node {
         cf set-env ${deployAppName} LANDSAT_INGEST_FREQUENCY ${env.LANDSAT_INGEST_FREQUENCY}
 			"""
 
-      echo "Staging application"
-      sh "cf push ${deployAppName}"
+      echo "Re-pushing application after vars"
+      sh "cf push ${deployAppName} -f manifest.jenkins.yml --hostname ${deployAppName} -d ${pcfDomain} --no-start"
 
       echo "Running database migration"
       sh "cf run-task ${deployAppName} './bf-ia-broker.bin migrate'"
