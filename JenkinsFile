@@ -58,6 +58,8 @@ node {
 			  cf set-env ${deployAppName} PL_API_URL ${env.PL_API_URL}
 			  cf set-env ${deployAppName} SENTINEL_HOST ${env.SENTINEL_HOST}
 			  cf set-env ${deployAppName} BF_TIDE_PREDICTION_URL ${tidesUrl}
+        cf set-env ${deployAppName} LANDSAT_INDEX_SCENES_URL XXX-TODO-FILL-THIS
+        cf set-env ${deployAppName} LANDSAT_INGEST_FREQUENCY XXX-TODO-FILL-THIS-DEFAULT-24H
 			"""
 			sh "cf start ${deployAppName}"
         } catch (Exception e) {
