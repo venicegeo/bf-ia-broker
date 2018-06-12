@@ -40,7 +40,7 @@ func getDbConnection(ctx util.LogContext) (*sql.DB, error) {
 	params.Set("sslmode", "disable")
 	dbURI.RawQuery = params.Encode()
 
-	util.LogInfo(ctx, fmt.Sprintf("Creating database connection at: `%s`", dbURI.String()))
+	util.LogInfo(ctx, "Creating database connection")
 	db, err := sql.Open("postgres", dbURI.String())
 	if err != nil {
 		return nil, err
