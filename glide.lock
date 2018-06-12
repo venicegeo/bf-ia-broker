@@ -1,8 +1,16 @@
-hash: 65a05f917c7cb298b7cf9e105b7c31311fd0667acdb6f22449caa0751791f549
-updated: 2018-04-20T14:52:22.6407621-04:00
+hash: 1af78468bf0e49d52eca0f66eeb4b59f071d721cc68a9cf0799a1596efda75f8
+updated: 2018-06-12T10:35:29.1594077-04:00
 imports:
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
   version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+- name: github.com/lib/pq
+  version: 90697d60dd844d5ef6ff15135d0203f65d2f53b8
+  subpackages:
+  - oid
+- name: github.com/pressly/goose
+  version: 95600eb369b1f657efd54a401ab85d0647a1db80
 - name: github.com/stretchr/testify
   version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
@@ -13,4 +21,12 @@ imports:
   - geojson
 - name: gopkg.in/urfave/cli.v1
   version: cfb38830724cc34fedffe9a2a29fb54fa9169cd1
-testImports: []
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib

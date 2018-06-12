@@ -11,3 +11,4 @@ import:
   - assert
 - package: gopkg.in/urfave/cli.v1
   version: v1.20.0
+- package: github.com/lib/pq
