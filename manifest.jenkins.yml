@@ -10,3 +10,5 @@ applications:
   env:
     LD_LIBRARY_PATH: "/home/vcap/app/lib"
     PL_DISABLE_PERMISSIONS_CHECK: "true"
+  services:
+      - pz-postgres
