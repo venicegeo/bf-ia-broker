@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/venicegeo/bf-ia-broker/util"
@@ -33,7 +34,14 @@ func getDbConnection(ctx util.LogContext) (*sql.DB, error) {
 		}
 	}
 
-	db, err := sql.Open("postgres", connStr)
+	// XXX: pq expects SSL to be enabled if not explicitly disabled; we need to explicitly disable it
+	dbURI, _ := url.Parse(connStr)
+	params := dbURI.Query()
+	params.Set("sslmode", "disable")
+	dbURI.RawQuery = params.Encode()
+
+	util.LogInfo(ctx, fmt.Sprintf("Creating database connection at: `%s`", dbURI.String()))
+	db, err := sql.Open("postgres", dbURI.String())
 	if err != nil {
 		return nil, err
 	}
