@@ -48,7 +48,7 @@ node {
           cf api ${env.PCF_API_ENDPOINT}
           cf auth ${CFUSER} ${CFPASS}
           cf target -o ${env.PCF_ORG} -s ${pcfSpace}
-          cf push ${deployAppName} -f manifest.jenkins.yml --hostname ${deployAppName} -d ${pcfDomain} -c 'sleep forever'
+          cf push ${deployAppName} -f manifest.jenkins.yml --hostname ${deployAppName} -d ${pcfDomain} -c 'sleep forever' --health-check-type none
 		"""
 		try {
 			sh """
@@ -61,13 +61,13 @@ node {
         cf set-env ${deployAppName} LANDSAT_INDEX_SCENES_URL ${env.LANDSAT_INDEX_SCENES_URL}
         cf set-env ${deployAppName} LANDSAT_INGEST_FREQUENCY ${env.LANDSAT_INGEST_FREQUENCY}
 			"""
-      
+
       echo "Running database migration"
       sh "cf restage ${deployAppName}"
       sh "cf run-task ${deployAppName} './bf-ia-broker.bin migrate'"
 
       echo "Migration successful, starting app"
-			sh "cf push ${deployAppName} -f manifest.jenkins.yml --hostname ${deployAppName} -d ${pcfDomain} -c null"
+			sh "cf push ${deployAppName} -f manifest.jenkins.yml --hostname ${deployAppName} -d ${pcfDomain} --health-check-type http"
     } catch (Exception e) {
       printLogsFailsafe deployAppName
       sh "cf delete ${deployAppName} -f"
