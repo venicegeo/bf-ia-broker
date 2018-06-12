@@ -22,6 +22,10 @@ const defaultIngestFrequency = 24 * time.Hour
 
 //calls the ingest worker a single time without scheduling
 func landsatIngestOnceAction(*cli.Context) {
+	scenesURL := os.Getenv(scenesFileEnv)
+	scenesIsGzip := strings.HasSuffix(strings.ToLower(scenesURL), "gz")
+	importer := db.NewImporter(scenesURL, scenesIsGzip, getDbConnectionFunc)
+
 	//Start the sleep/ingest loop.
 	go importer.Import(nil)
 }
