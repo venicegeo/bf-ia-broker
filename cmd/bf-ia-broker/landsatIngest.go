@@ -17,7 +17,7 @@ import (
 )
 
 const scenesFileEnv = "LANDSAT_INDEX_SCENES_URL"
-const ingestFrequencyEnv = "ingest_frequency"
+const ingestFrequencyEnv = "LANDSAT_INGEST_FREQUENCY"
 const defaultIngestFrequency = 24 * time.Hour
 
 //landsatIngestAction starts the worker process and an http server
