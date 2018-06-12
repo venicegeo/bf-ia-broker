@@ -16,6 +16,7 @@ package main
 
 import (
 	"compress/gzip"
+	"database/sql"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -26,7 +27,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"github.com/venicegeo/bf-ia-broker/landsat"
+	landsat "github.com/venicegeo/bf-ia-broker/landsat_planet"
+	"github.com/venicegeo/bf-ia-broker/util"
 )
 
 const badLandSatID = "X_NOT_LANDSAT_X"
@@ -51,6 +53,7 @@ func TestMain(m *testing.M) {
 	mockAWSServer := httptest.NewServer(mockAWSHandler{})
 	defer mockAWSServer.Close()
 	os.Setenv("LANDSAT_HOST", mockAWSServer.URL)
+	getDbConnectionFunc = func(ctx util.LogContext) (*sql.DB, error) { return nil, nil }
 	code := m.Run()
 	os.Exit(code)
 }

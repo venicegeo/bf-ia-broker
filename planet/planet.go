@@ -21,139 +21,19 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
 
-	"github.com/venicegeo/bf-ia-broker/landsat"
+	landsat "github.com/venicegeo/bf-ia-broker/landsat_planet"
+	"github.com/venicegeo/bf-ia-broker/model"
 	"github.com/venicegeo/bf-ia-broker/tides"
 	"github.com/venicegeo/bf-ia-broker/util"
 	"github.com/venicegeo/geojson-go/geojson"
 )
 
-var disablePermissionsCheck bool
-
-func init() {
-	disablePermissionsCheck, _ = util.IsPlanetPermissionsDisabled()
-	if disablePermissionsCheck {
-		util.LogInfo(&util.BasicLogContext{}, "Disabling Planet Labs permissions check")
-	}
-}
-
-// Context is the context for a Planet Labs Operation
-type Context struct {
-	BasePlanetURL string
-	BaseTidesURL  string
-	PlanetKey     string
-	sessionID     string
-}
-
-// AppName returns an empty string
-func (c *Context) AppName() string {
-	return "bf-ia-broker"
-}
-
-// SessionID returns a Session ID, creating one if needed
-func (c *Context) SessionID() string {
-	if c.sessionID == "" {
-		c.sessionID, _ = util.PsuUUID()
-	}
-	return c.sessionID
-}
-
-// LogRootDir returns an empty string
-func (c *Context) LogRootDir() string {
-	return ""
-}
-
-// SearchOptions are the search options for a quick-search request
-type SearchOptions struct {
-	ItemType        string
-	Tides           bool
-	AcquiredDate    string
-	MaxAcquiredDate string
-	Bbox            geojson.BoundingBox
-	CloudCover      float64
-}
-
-type searchResults struct {
-	Features []feature `json:"features"`
-}
-
-type feature struct {
-	Links       Links    `json:"_links"`
-	Permissions []string `json:"_permissions"`
-}
-
-type request struct {
-	ItemTypes []string `json:"item_types"`
-	Filter    filter   `json:"filter"`
-}
-
-type filter struct {
-	Type   string        `json:"type"`
-	Config []interface{} `json:"config"`
-}
-
-type objectFilter struct {
-	Type      string      `json:"type"`
-	FieldName string      `json:"field_name"`
-	Config    interface{} `json:"config"`
-}
-
-type dateConfig struct {
-	GTE string `json:"gte,omitempty"`
-	LTE string `json:"lte,omitempty"`
-	GT  string `json:"gt,omitempty"`
-	LT  string `json:"lt,omitempty"`
-}
-
-type rangeConfig struct {
-	GTE float64 `json:"gte,omitempty"`
-	LTE float64 `json:"lte,omitempty"`
-	GT  float64 `json:"gt,omitempty"`
-	LT  float64 `json:"lt,omitempty"`
-}
-
-// Assets represents the assets available for a scene
-type Assets struct {
-	Analytic    Asset `json:"analytic"`
-	AnalyticXML Asset `json:"analytic_xml"`
-	UDM         Asset `json:"udm"`
-	Visual      Asset `json:"visual"`
-	VisualXML   Asset `json:"visual_xml"`
-}
-
-// Asset represents a single asset available for a scene
-type Asset struct {
-	Links       Links    `json:"_links"`
-	Status      string   `json:"status"`
-	Type        string   `json:"type"`
-	Location    string   `json:"location,omitempty"`
-	ExpiresAt   string   `json:"expires_at,omitempty"`
-	Permissions []string `json:"_permissions,omitempty"`
-}
-
-// Links represents the links JSON structure.
-type Links struct {
-	Self     string `json:"_self"`
-	Activate string `json:"activate"`
-	Type     string `json:"type"`
-}
-
-type doRequestInput struct {
-	method      string
-	inputURL    string // URL may be relative or absolute based on baseURLString
-	body        []byte
-	contentType string
-}
-
-// MetadataOptions are the options for the Asset func
-type MetadataOptions struct {
-	ID       string
-	Tides    bool
-	ItemType string
-}
+var addTidesToSearchResults = tides.AddTidesToSearchResults
 
 // GetScenes returns a FeatureCollection containing the scenes requested
 func GetScenes(options SearchOptions, context *Context) (*geojson.FeatureCollection, error) {
@@ -163,7 +43,6 @@ func GetScenes(options SearchOptions, context *Context) (*geojson.FeatureCollect
 		requestBody  []byte
 		responseBody []byte
 		req          request
-		fc           *geojson.FeatureCollection
 	)
 
 	req.ItemTypes = append(req.ItemTypes, options.ItemType)
@@ -184,7 +63,7 @@ func GetScenes(options SearchOptions, context *Context) (*geojson.FeatureCollect
 		err = util.LogSimpleErr(context, fmt.Sprintf("Failed to marshal request object %#v.", req), err)
 		return nil, err
 	}
-	if response, err = doRequest(doRequestInput{method: "POST", inputURL: "data/v1/quick-search", body: requestBody, contentType: "application/json"}, context); err != nil {
+	if response, err = planetRequest(planetRequestInput{method: "POST", inputURL: "data/v1/quick-search", body: requestBody, contentType: "application/json"}, context); err != nil {
 		err = util.LogSimpleErr(context, fmt.Sprintf("Failed to complete Planet API request %#v.", string(requestBody)), err)
 		return nil, err
 	}
@@ -204,23 +83,28 @@ func GetScenes(options SearchOptions, context *Context) (*geojson.FeatureCollect
 	defer response.Body.Close()
 	responseBody, _ = ioutil.ReadAll(response.Body)
 
-	if fc, err = transformSRBody(responseBody, context); err != nil {
+	results, err := parseSearchResults(context, responseBody)
+	if err != nil {
 		return nil, err
 	}
 	if options.Tides {
 		tidesContext := tides.Context{TidesURL: context.BaseTidesURL}
-		if fc, err = tides.GetTides(fc, &tidesContext); err != nil {
+		if err = addTidesToSearchResults(&tidesContext, results); err != nil {
 			return nil, err
 		}
 	}
-	return fc, nil
+
+	featureCreators := make([]model.GeoJSONFeatureCreator, len(results))
+	for i, result := range results {
+		featureCreators[i] = result
+	}
+
+	return model.MultiBrokerResult{FeatureCreators: featureCreators}.GeoJSONFeatureCollection()
 }
 
-// GetAsset returns the status of the analytic asset and
-// attempts to activate it if needed
-func GetAsset(options MetadataOptions, context *Context) (Asset, error) {
+// GetPlanetAssets returns the asset metadata related to a particular item
+func GetPlanetAssets(options MetadataOptions, context *Context) (*model.PlanetAssetMetadata, error) {
 	var (
-		result   Asset
 		response *http.Response
 		err      error
 		body     []byte
@@ -228,18 +112,18 @@ func GetAsset(options MetadataOptions, context *Context) (Asset, error) {
 	)
 	// Note: trailing `/` is needed here to avoid a redirect which causes a Go 1.7 redirect bug issue
 	inputURL := "data/v1/item-types/" + options.ItemType + "/items/" + options.ID + "/assets/"
-	if response, err = doRequest(doRequestInput{method: "GET", inputURL: inputURL}, context); err != nil {
-		return result, err
+	if response, err = planetRequest(planetRequestInput{method: "GET", inputURL: inputURL}, context); err != nil {
+		return nil, err
 	}
 	switch {
 	case (response.StatusCode >= 400) && (response.StatusCode < 500):
 		message := fmt.Sprintf("Failed to get asset information for scene %v: %v. ", options.ID, response.Status)
 		err := util.HTTPErr{Status: response.StatusCode, Message: message}
 		util.LogAlert(context, message)
-		return result, err
+		return nil, err
 	case response.StatusCode >= 500:
 		err = util.LogSimpleErr(context, fmt.Sprintf("Failed to get asset information for scene %v. ", options.ID), errors.New(response.Status))
-		return result, err
+		return nil, err
 	default:
 		//no op
 	}
@@ -252,34 +136,45 @@ func GetAsset(options MetadataOptions, context *Context) (Asset, error) {
 			URL:        inputURL,
 			HTTPStatus: response.StatusCode}
 		err = plErr.Log(context, "")
-		return result, err
+		return nil, err
 	}
 
-	if assets.Analytic.Type == "" && (options.ItemType == "REOrthoTile" || options.ItemType == "PSOrthoTile") {
-		// RapidEye and PlanetScope scenes *must* have analytic asset data
-		plErr := util.Error{LogMsg: "Invalid data from Planet API asset request (analytic asset type is empty)",
+	assetMetadata, err := planetAssetMetadataFromAssets(assets)
+
+	log.Print("XXXXXXXX")
+	log.Print(string(body))
+	log.Print(assets)
+	log.Print(assetMetadata)
+	log.Print(err)
+
+	if err == nil && assetMetadata == nil && (options.ItemType == "REOrthoTile" || options.ItemType == "PSOrthoTile") {
+		err = errors.New("Found no asset data in response for item type requiring asset data")
+	}
+
+	if err != nil {
+		plErr := util.Error{LogMsg: "Invalid data from Planet API asset request: " + err.Error(),
 			SimpleMsg:  "Planet Labs returned invalid metadata for this scene's assets.",
 			Response:   string(body),
 			URL:        inputURL,
 			HTTPStatus: response.StatusCode}
 		err = plErr.Log(context, "")
-		return assets.Analytic, util.HTTPErr{Status: http.StatusBadGateway, Message: plErr.SimpleMsg}
+		return assetMetadata, util.HTTPErr{Status: http.StatusBadGateway, Message: plErr.SimpleMsg}
 	}
 
-	return assets.Analytic, nil
+	return assetMetadata, nil
 }
 
-// GetMetadata returns the Beachfront metadata for a single scene
-func GetMetadata(options MetadataOptions, context *Context) (*geojson.Feature, error) {
+// GetPlanetItem returns the Beachfront metadata for a single scene
+func GetPlanetItem(options MetadataOptions, context *Context) (*model.BrokerSearchResult, error) {
 	var (
-		response *http.Response
-		err      error
-		body     []byte
-		feature  geojson.Feature
+		response      *http.Response
+		err           error
+		body          []byte
+		planetFeature geojson.Feature
 	)
 	inputURL := "data/v1/item-types/" + options.ItemType + "/items/" + options.ID
-	input := doRequestInput{method: "GET", inputURL: inputURL}
-	if response, err = doRequest(input, context); err != nil {
+	input := planetRequestInput{method: "GET", inputURL: inputURL}
+	if response, err = planetRequest(input, context); err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
@@ -296,7 +191,7 @@ func GetMetadata(options MetadataOptions, context *Context) (*geojson.Feature, e
 	default:
 		//no op
 	}
-	if err = json.Unmarshal(body, &feature); err != nil {
+	if err = json.Unmarshal(body, &planetFeature); err != nil {
 		plErr := util.Error{LogMsg: "Failed to Unmarshal response from Planet API data request: " + err.Error(),
 			SimpleMsg:  "Planet Labs returned an unexpected response for this request. See log for further details.",
 			Response:   string(body),
@@ -306,36 +201,40 @@ func GetMetadata(options MetadataOptions, context *Context) (*geojson.Feature, e
 		return nil, err
 	}
 
-	feature = *transformSRFeature(&feature, context)
+	result, err := planetSearchBrokerResultFromFeature(&planetFeature)
+	if err != nil {
+		return nil, err
+	}
+
 	if options.Tides {
 		var (
 			tc tides.Context
 		)
 		tc.TidesURL = context.BaseTidesURL
-		fc := geojson.NewFeatureCollection([]*geojson.Feature{&feature})
-		if fc, err = tides.GetTides(fc, &tc); err != nil {
+		tidesData, err := tides.GetSingleTidesData(&tc, result.BasicBrokerResult)
+		if err != nil {
 			return nil, err
 		}
-		feature = *fc.Features[0]
+		result.TidesData = tidesData
 	}
 
-	return &feature, nil
+	return result, nil
 }
 
 // Activate retrieves and activates the analytic asset.
 func Activate(options MetadataOptions, context *Context) (*http.Response, error) {
 	var (
-		asset Asset
-		err   error
+		assetMetadata *model.PlanetAssetMetadata
+		err           error
 	)
-	if asset, err = GetAsset(options, context); err != nil {
+	if assetMetadata, err = GetPlanetAssets(options, context); err != nil {
 		return nil, err
 	}
-	return doRequest(doRequestInput{method: "POST", inputURL: asset.Links.Activate}, context)
+	return planetRequest(planetRequestInput{method: "POST", inputURL: assetMetadata.ActivationURL.String()}, context)
 }
 
-// doRequest performs the request
-func doRequest(input doRequestInput, context *Context) (*http.Response, error) {
+// planetRequest performs the request
+func planetRequest(input planetRequestInput, context *Context) (*http.Response, error) {
 	var (
 		request   *http.Request
 		parsedURL *url.URL

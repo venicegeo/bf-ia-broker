@@ -47,14 +47,14 @@ func TestPlanetNoParameters(t *testing.T) {
         }
   }`
 
-	requestInput := doRequestInput{
+	requestInput := planetRequestInput{
 		method:      "POST",
 		inputURL:    "data/v1/quick-search",
 		body:        []byte(body),
 		contentType: "application/json",
 	}
 
-	_, err := doRequest(requestInput, &context)
+	_, err := planetRequest(requestInput, &context)
 	assert.Nil(t, err, "Expected request to succeed; received: %v", err)
 }
 
@@ -94,6 +94,7 @@ func TestGetScenesAcquiredDate(t *testing.T) {
 func TestGetScenesTides(t *testing.T) {
 	planetServer, tidesServer, _ := createTestFixtures()
 	context := makeTestingContext(planetServer, tidesServer)
+	mockAddTidesToSearchResults(nil)
 
 	options := SearchOptions{Tides: true}
 
@@ -105,6 +106,7 @@ func TestGetScenesTides(t *testing.T) {
 func TestGetMetadata(t *testing.T) {
 	planetServer, tidesServer, _ := createTestFixtures()
 	context := makeTestingContext(planetServer, tidesServer)
+	mockAddTidesToSearchResults(nil)
 
 	options := SearchOptions{Tides: true}
 
@@ -112,10 +114,10 @@ func TestGetMetadata(t *testing.T) {
 	assert.Nil(t, err, "Expected request to succeed; received: %v", err)
 
 	aOptions := MetadataOptions{ID: scenes.Features[0].IDStr(), Tides: true, ItemType: "REOrthoTile"}
-	feature, err := GetMetadata(aOptions, &context)
+	result, err := GetPlanetItem(aOptions, &context)
 	assert.Nil(t, err, "Failed to get asset metadata; received: %v", err)
 
-	assert.Equal(t, aOptions.ID, feature.IDStr())
+	assert.Equal(t, aOptions.ID, result.ID)
 }
 
 func TestGetAsset(t *testing.T) {
@@ -128,7 +130,7 @@ func TestGetAsset(t *testing.T) {
 	assert.Nil(t, err, "Expected request to succeed; received: %v", err)
 
 	aOptions := MetadataOptions{ID: scenes.Features[0].IDStr(), Tides: true, ItemType: "REOrthoTile"}
-	_, err = GetAsset(aOptions, &context)
+	_, err = GetPlanetAssets(aOptions, &context)
 	assert.Nil(t, err, "Failed to get asset; received %v", err)
 }
 
@@ -137,7 +139,7 @@ func TestGetMetadataBadAssetID(t *testing.T) {
 	context := makeTestingContext(planetServer, tidesServer)
 	aOptions := MetadataOptions{ID: "X-BAD-ID-X", Tides: true, ItemType: "PSOrthoTile"}
 
-	_, err := GetMetadata(aOptions, &context)
+	_, err := GetPlanetItem(aOptions, &context)
 	assert.NotNil(t, err, "Expected invalid ID asset to fail, but it succeeded.")
 	if _, ok := err.(util.HTTPErr); err != nil && !ok {
 		t.Errorf("Expected an HTTPErr, got a %T", err)
@@ -155,7 +157,7 @@ func TestGetAssetNoDataFromPlanet(t *testing.T) {
 
 	// Should 502 for RapidEye missing asset data
 	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "REOrthoTile"}
-	_, err = GetAsset(aOptions, &context)
+	_, err = GetPlanetAssets(aOptions, &context)
 	if httpErr, ok := err.(util.HTTPErr); err != nil && !ok {
 		t.Errorf("Expected an HTTPErr, got a %T", err)
 	} else {
@@ -164,7 +166,7 @@ func TestGetAssetNoDataFromPlanet(t *testing.T) {
 
 	// Should 502 for PlanetScope missing asset data
 	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "PSOrthoTile"}
-	_, err = GetAsset(aOptions, &context)
+	_, err = GetPlanetAssets(aOptions, &context)
 	if httpErr, ok := err.(util.HTTPErr); err != nil && !ok {
 		t.Errorf("Expected an HTTPErr, got a %T", err)
 	} else {
@@ -173,12 +175,12 @@ func TestGetAssetNoDataFromPlanet(t *testing.T) {
 
 	// Should NOT error for Landsat missing asset data (it's supposed to not have it)
 	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "Landsat8L1G"}
-	_, err = GetAsset(aOptions, &context)
+	_, err = GetPlanetAssets(aOptions, &context)
 	assert.Nil(t, err, "Expected request to succeed; received: %v", err)
 
 	// Should NOT error for Sentinel missing asset data (it's supposed to not have it)
 	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "Sentinel2L1C"}
-	_, err = GetAsset(aOptions, &context)
+	_, err = GetPlanetAssets(aOptions, &context)
 	assert.Nil(t, err, "Expected request to succeed; received: %v", err)
 }
 
@@ -187,7 +189,7 @@ func TestGetMetadataBadKey(t *testing.T) {
 	context := makeTestingContext(planetServer, tidesServer)
 	context.PlanetKey = "garbage"
 	aOptions := MetadataOptions{ID: "foobar123", Tides: true, ItemType: "PSOrthoTile"}
-	_, err := GetMetadata(aOptions, &context)
+	_, err := GetPlanetItem(aOptions, &context)
 	assert.NotNil(t, err, "Expected invalid API key to fail, but it succeeded.")
 	if httpErr, ok := err.(util.HTTPErr); err != nil && !ok {
 		t.Errorf("Expected an HTTPErr, got a %T", err)
@@ -205,6 +207,6 @@ func TestGetMetadataSentinel(t *testing.T) {
 		ItemType: "Sentinel2L1C",
 	}
 
-	_, err := GetMetadata(options, &context)
+	_, err := GetPlanetItem(options, &context)
 	assert.Nil(t, err, "Expected request to succeed; received: %v", err)
 }

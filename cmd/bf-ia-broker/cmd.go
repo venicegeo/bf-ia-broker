@@ -31,6 +31,22 @@ var commands = cli.Commands{
 		Usage:   "Print the version number of the Broker CLI",
 		Action:  versionAction,
 	},
+	cli.Command{
+		Name:    "landsat_ingest_schedule",
+		Usage:   "Update the database with the latest landsat entries on a schedule",
+		Action:  landsatIngestScheduleAction,
+	},
+	cli.Command{
+		Name:    "landsat_ingest",
+		Usage:   "One-time Update of the database with the latest landsat entries",
+		Action:  landsatIngestOnceAction,
+	},
+	cli.Command{
+		Name:    "migrate",
+		Aliases: []string{"m"},
+		Usage:   "Update database schema",
+		Action:  migrateDatabaseAction,
+	},
 }
 
 func createCliApp() (app *cli.App) {

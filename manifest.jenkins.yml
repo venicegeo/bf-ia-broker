@@ -1,7 +1,7 @@
 applications:
 - name: bf-ia-broker
   host: bf-ia-broker
-  command: chmod 755 ./bf-ia-broker.bin && ./bf-ia-broker.bin serve
+  command: ./bf-ia-broker.bin serve
   buildpack: binary_buildpack
   memory: 512M
   disk_quota: 512M

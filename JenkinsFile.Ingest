@@ -1,0 +1,45 @@
+#!/usr/bin/groovy
+
+node() {
+  def root = pwd()
+
+  stage("Config") {
+    // clone the configuration repository and copy the current configuration
+    def configDir = "${root}/configuration"
+    def configFile = "${root}/config.json"
+    dir(configDir) {
+      git url: "${env.CONFIGURATION_URL}", credentialsId: "${env.CONFIGURATION_CREDS}"
+      sh "mv ${configDir}/${env.ENVIRONMENT}-config.json ${configFile}"
+      deleteDir()
+    }
+    // read the current configuration
+    def configJson = readJSON file: "${configFile}"
+    for (param in configJson.credparams + configJson.jobparams) {
+      def paramValueString = (param.defaultvalue != null) ? param.defaultvalue.toString() : ""
+      env."${param.name}" = (param.type == "booleanParam") ? paramValueString.toBoolean() : paramValueString
+    }
+    appvers = "${env.PROMOTE_VERSION}"
+    tidesUrl = "https://bf-tideprediction.${env.PROMOTE_DOMAIN}/tides"
+  }
+
+  def cfSpaces = ["${env.PHASE_ONE_PCF_SPACE}", "${env.PHASE_TWO_PCF_SPACE}", "${env.PROD_PCF_SPACE}"]
+
+  for (String cfSpace : cfSpaces) {
+    if (cfSpace != null) {
+      stage("Ingest - ${cfSpace}") {
+        // Run the CF Task to start the Landsat Ingest Job from the IA-Broker
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${env.PCF_CREDS}", usernameVariable: "CFUSER", passwordVariable: "CFPASS"]]) {
+          sh """
+            cf api ${env.PCF_API_ENDPOINT}
+            cf auth ${CFUSER} ${CFPASS}
+            cf target -s ${cfSpace}
+          """
+          // Get the name of the current running IA-Broker application
+          def appName = sh(script: "cf apps | grep 'bf-ia-broker' | cut -f1 -d ' ' ", returnStdout: true).trim()
+          // Run the Ingest Task
+          sh "cf run-task ${appName} './bf-ia-broker.bin landsat_ingest' -k 512M -m 1G"
+        }
+      }
+    }
+  }
+}
