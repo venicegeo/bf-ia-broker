@@ -98,7 +98,7 @@ func TestBasicBrokerResultFromPlanetFeature_MissingCloudCover(t *testing.T) {
 	// Asserts
 	assert.NotNil(t, result)
 	assert.Nil(t, err)
-	assert.Equal(t, -1, result.CloudCover)
+	assert.Equal(t, -1.0, result.CloudCover)
 }
 
 func TestBasicBrokerResultFromPlanetFeature_ZeroCloudCover(t *testing.T) {

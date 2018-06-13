@@ -55,9 +55,9 @@ func basicBrokerResultFromPlanetFeature(feature *geojson.Feature, fileFormat mod
 	if err != nil {
 		return nil, err
 	}
-	cloudCover := feature.PropertyFloat("cloud_cover") * 100
-	if cloudCover == 0 {
-		cloudCover = -1
+	cloudCover := -1.0
+	if _, ok := feature.Properties["cloud_cover"]; ok {
+		cloudCover = feature.PropertyFloat("cloud_cover") * 100
 	}
 
 	return &model.BasicBrokerResult{
