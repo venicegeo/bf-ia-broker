@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/venicegeo/bf-ia-broker/model"
+	"github.com/venicegeo/geojson-go/geojson"
 )
 
 func TestPlanetAssetMetadataFromAssets_Success(t *testing.T) {
@@ -82,4 +83,54 @@ func TestPlanetAssetMetadataFromAssets_Error(t *testing.T) {
 	assert.NotNil(t, badTimeErr)
 	assert.NotNil(t, noLocationErr)
 	assert.NotNil(t, noActivationErr)
+}
+
+func TestBasicBrokerResultFromPlanetFeature_MissingCloudCover(t *testing.T) {
+	// Mock
+	mockAcquired := time.Unix(123, 0).UTC()
+	feature := geojson.NewFeature([]float64{}, "test-id", map[string]interface{}{
+		"acquired": mockAcquired.Format(model.PlanetTimeFormat),
+	})
+
+	// Tested Code
+	result, err := basicBrokerResultFromPlanetFeature(feature, model.JPEG2000)
+
+	// Asserts
+	assert.NotNil(t, result)
+	assert.Nil(t, err)
+	assert.Equal(t, -1.0, result.CloudCover)
+}
+
+func TestBasicBrokerResultFromPlanetFeature_ZeroCloudCover(t *testing.T) {
+	// Mock
+	mockAcquired := time.Unix(123, 0).UTC()
+	feature := geojson.NewFeature([]float64{}, "test-id", map[string]interface{}{
+		"acquired":    mockAcquired.Format(model.PlanetTimeFormat),
+		"cloud_cover": 0.0,
+	})
+
+	// Tested Code
+	result, err := basicBrokerResultFromPlanetFeature(feature, model.JPEG2000)
+
+	// Asserts
+	assert.NotNil(t, result)
+	assert.Nil(t, err)
+	assert.Equal(t, 0.0, result.CloudCover)
+}
+
+func TestBasicBrokerResultFromPlanetFeature_NonZeroCloudCover(t *testing.T) {
+	// Mock
+	mockAcquired := time.Unix(123, 0).UTC()
+	feature := geojson.NewFeature([]float64{}, "test-id", map[string]interface{}{
+		"acquired":    mockAcquired.Format(model.PlanetTimeFormat),
+		"cloud_cover": 0.123,
+	})
+
+	// Tested Code
+	result, err := basicBrokerResultFromPlanetFeature(feature, model.JPEG2000)
+
+	// Asserts
+	assert.NotNil(t, result)
+	assert.Nil(t, err)
+	assert.Equal(t, 12.3, result.CloudCover)
 }

@@ -26,7 +26,6 @@ import (
 	"net/url"
 	"strings"
 
-	landsat "github.com/venicegeo/bf-ia-broker/landsat_planet"
 	"github.com/venicegeo/bf-ia-broker/model"
 	"github.com/venicegeo/bf-ia-broker/tides"
 	"github.com/venicegeo/bf-ia-broker/util"
@@ -271,103 +270,4 @@ func planetRequest(input planetRequestInput, context *Context) (*http.Response, 
 	util.LogAudit(context, util.LogAuditInput{Actor: "planet/doRequest", Action: input.method, Actee: inputURL, Message: message, Severity: util.INFO})
 	util.LogAudit(context, util.LogAuditInput{Actor: inputURL, Action: input.method + " response", Actee: "planet/doRequest", Message: "Receiving data from Planet API", Severity: util.INFO})
 	return util.HTTPClient().Do(request)
-}
-
-func scontains(input []string, check string) bool {
-	for _, curr := range input {
-		if curr == check {
-			return true
-		}
-	}
-	return false
-}
-
-// Transforms search results into a FeatureCollection for later use
-func transformSRBody(body []byte, context util.LogContext) (*geojson.FeatureCollection, error) {
-	var (
-		result    *geojson.FeatureCollection
-		fc        *geojson.FeatureCollection
-		fci       interface{}
-		err       error
-		ok        bool
-		features  []*geojson.Feature
-		plResults searchResults
-	)
-	if fci, err = geojson.Parse(body); err != nil {
-		err = util.LogSimpleErr(context, fmt.Sprintf("Failed to parse GeoJSON.\n%v", string(body)), err)
-		return nil, err
-	}
-	if fc, ok = fci.(*geojson.FeatureCollection); !ok {
-		plErr := util.Error{SimpleMsg: fmt.Sprintf("Expected a FeatureCollection and got %T", fci),
-			Response: string(body)}
-		err = plErr.Log(context, "")
-		return nil, err
-	}
-	if err = json.Unmarshal(body, &plResults); err != nil {
-		return result, err
-	}
-	for inx, curr := range fc.Features {
-
-		// We need to suppress scenes that we don't have permissions for
-		if disablePermissionsCheck || scontains(plResults.Features[inx].Permissions, "assets.analytic:download") {
-			features = append(features, transformSRFeature(curr, context))
-			// } else {
-			// 	util.LogInfo(context, fmt.Sprintf("Skipping scene %v due to lack of permissions.", curr.IDStr()))
-		}
-	}
-	result = geojson.NewFeatureCollection(features)
-	return result, nil
-}
-
-func transformSRFeature(feature *geojson.Feature, context util.LogContext) *geojson.Feature {
-	properties := make(map[string]interface{})
-	if cc, ok := feature.Properties["cloud_cover"].(float64); ok {
-		properties["cloudCover"] = cc * 100.0
-	} else {
-		properties["cloudCover"] = -1.0
-	}
-	id := feature.IDStr()
-	properties["resolution"], _ = feature.Properties["gsd"].(float64)
-	adString, _ := feature.Properties["acquired"].(string)
-	properties["acquiredDate"] = adString
-	properties["fileFormat"] = "geotiff"
-	properties["sensorName"], _ = feature.Properties["satellite_id"].(string)
-
-	if landsat.IsValidLandSatID(id) {
-		dataType, _ := feature.Properties["data_type"].(string)
-		err := addLandsatS3BandsToProperties(id, dataType, &properties)
-		if err != nil {
-			util.LogAlert(context, err.Error()+" :: in LandSat feature: "+feature.String())
-		}
-	}
-
-	if isSentinelFeature(id) {
-		properties["fileFormat"] = "jpeg2000"
-		err := addSentinelS3BandsToProperties(id, &properties)
-		if err != nil {
-			util.LogAlert(context, err.Error()+" :: in Sentinel-2 feature: "+feature.String())
-		}
-	}
-
-	result := geojson.NewFeature(feature.Geometry, id, properties)
-	result.Bbox = result.ForceBbox()
-	return result
-}
-
-func injectAssetIntoMetadata(feature *geojson.Feature, asset Asset) {
-	if asset.ExpiresAt != "" {
-		feature.Properties["expires_at"] = asset.ExpiresAt
-	}
-	if asset.Location != "" {
-		feature.Properties["location"] = asset.Location
-	}
-	if len(asset.Permissions) > 0 {
-		feature.Properties["permissions"] = asset.Permissions
-	}
-	if asset.Status != "" {
-		feature.Properties["status"] = asset.Status
-	}
-	if asset.Type != "" {
-		feature.Properties["type"] = asset.Type
-	}
 }
