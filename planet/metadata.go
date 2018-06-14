@@ -5,7 +5,6 @@ import (
 
 	landsat "github.com/venicegeo/bf-ia-broker/landsat_planet"
 	"github.com/venicegeo/bf-ia-broker/model"
-	"github.com/venicegeo/bf-ia-broker/tides"
 	"github.com/venicegeo/geojson-go/geojson"
 )
 
@@ -20,25 +19,13 @@ func GetItemWithAssetMetadata(context *Context, options MetadataOptions) (*geojs
 	}
 
 	basicResult := searchResult.BasicBrokerResult
+	tidesData := searchResult.TidesData
 	if options.ItemType == "Sentinel2L1C" {
 		// Sentinel-2 uses JPEG2000 imagery
 		basicResult.FileFormat = model.JPEG2000
 	}
 	if err != nil {
 		return nil, err
-	}
-
-	var tidesData *model.TidesData
-	if options.Tides {
-		// Hacky way to use the multi-tides query for a single query
-		singleSearchResultForTides := []model.BrokerSearchResult{model.BrokerSearchResult{
-			BasicBrokerResult: basicResult,
-		}}
-		tidesContext := tides.Context{TidesURL: context.BaseTidesURL}
-		if err = tides.AddTidesToSearchResults(&tidesContext, singleSearchResultForTides); err != nil {
-			return nil, err
-		}
-		tidesData = singleSearchResultForTides[0].TidesData
 	}
 
 	var result model.GeoJSONFeatureCreator

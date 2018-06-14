@@ -206,15 +206,15 @@ func GetPlanetItem(options MetadataOptions, context *Context) (*model.BrokerSear
 	}
 
 	if options.Tides {
-		var (
-			tc tides.Context
-		)
-		tc.TidesURL = context.BaseTidesURL
-		tidesData, err := tides.GetSingleTidesData(&tc, result.BasicBrokerResult)
-		if err != nil {
+		// Hacky way to use the multi-tides query for a single query
+		singleSearchResultForTides := []model.BrokerSearchResult{model.BrokerSearchResult{
+			BasicBrokerResult: result.BasicBrokerResult,
+		}}
+		tidesContext := tides.Context{TidesURL: context.BaseTidesURL}
+		if err = tides.AddTidesToSearchResults(&tidesContext, singleSearchResultForTides); err != nil {
 			return nil, err
 		}
-		result.TidesData = tidesData
+		result.TidesData = singleSearchResultForTides[0].TidesData
 	}
 
 	return result, nil
