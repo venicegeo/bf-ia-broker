@@ -30,10 +30,15 @@ func GetItemWithAssetMetadata(context *Context, options MetadataOptions) (*geojs
 
 	var tidesData *model.TidesData
 	if options.Tides {
+		// Hacky way to use the multi-tides query for a single query
+		singleSearchResultForTides := []model.BrokerSearchResult{model.BrokerSearchResult{
+			BasicBrokerResult: basicResult,
+		}}
 		tidesContext := tides.Context{TidesURL: context.BaseTidesURL}
-		if tidesData, err = tides.GetSingleTidesData(&tidesContext, basicResult); err != nil {
+		if err = tides.AddTidesToSearchResults(&tidesContext, singleSearchResultForTides); err != nil {
 			return nil, err
 		}
+		tidesData = singleSearchResultForTides[0].TidesData
 	}
 
 	var result model.GeoJSONFeatureCreator
