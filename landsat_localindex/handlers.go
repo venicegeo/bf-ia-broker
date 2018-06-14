@@ -116,6 +116,8 @@ func (h DiscoverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		util.HTTPError(r, w, &h.Context, message, http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(featureCollection.String()))
 }
 
@@ -193,6 +195,8 @@ func (h MetadataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		tx.Rollback()
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(feature.String()))
 }
 
