@@ -5,6 +5,7 @@ import (
 
 	"github.com/venicegeo/bf-ia-broker/model"
 	"github.com/venicegeo/bf-ia-broker/tides"
+	"github.com/venicegeo/bf-ia-broker/util"
 	"github.com/venicegeo/geojson-go/geojson"
 )
 
@@ -51,8 +52,7 @@ func GetItemWithAssetMetadata(context *Context, options MetadataOptions) (*geojs
 
 	case "Landsat8L1G":
 		// Landsat imagery is hosted on an external S3 archive
-		// XXX XXX XXX GET S3 URL
-		landsatBands, err := model.NewLandsatS3Bands("", basicResult.ID)
+		landsatBands, err := model.NewLandsatS3Bands(util.GetLandsatHost(), basicResult.ID)
 		if err != nil {
 			return nil, err
 		}
