@@ -68,6 +68,7 @@ func basicBrokerResultFromPlanetFeature(feature *geojson.Feature, fileFormat mod
 		ID:           feature.IDStr(),
 		Resolution:   feature.PropertyFloat("gsd"),
 		SensorName:   feature.PropertyString("satellite_id"),
+		DataType:     feature.PropertyString("data_type"),
 	}, nil
 }
 

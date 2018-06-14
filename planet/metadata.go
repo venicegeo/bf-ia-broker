@@ -3,9 +3,9 @@ package planet
 import (
 	"errors"
 
+	landsat "github.com/venicegeo/bf-ia-broker/landsat_planet"
 	"github.com/venicegeo/bf-ia-broker/model"
 	"github.com/venicegeo/bf-ia-broker/tides"
-	"github.com/venicegeo/bf-ia-broker/util"
 	"github.com/venicegeo/geojson-go/geojson"
 )
 
@@ -52,7 +52,11 @@ func GetItemWithAssetMetadata(context *Context, options MetadataOptions) (*geojs
 
 	case "Landsat8L1G":
 		// Landsat imagery is hosted on an external S3 archive
-		landsatBands, err := model.NewLandsatS3Bands(util.GetLandsatHost(), basicResult.ID)
+		folderURL, _, err := landsat.GetSceneFolderURL(basicResult.ID, basicResult.DataType)
+		if err != nil {
+			return nil, err
+		}
+		landsatBands, err := model.NewLandsatS3Bands(folderURL, basicResult.ID)
 		if err != nil {
 			return nil, err
 		}

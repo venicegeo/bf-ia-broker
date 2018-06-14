@@ -15,6 +15,7 @@ type BasicBrokerResult struct {
 	AcquiredDate time.Time
 	SensorName   string
 	FileFormat   BrokerFileFormat
+	DataType     string
 }
 
 // GeoJSONFeature implements the GeoJSONFeatureCreator interface
