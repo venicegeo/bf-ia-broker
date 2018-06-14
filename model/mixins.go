@@ -70,7 +70,7 @@ type landsatSuffixDestination struct {
 func NewLandsatS3Bands(bucketFolderURL string, id string) (*LandsatS3Bands, error) {
 	baseURL, err := url.Parse(bucketFolderURL)
 	if baseURL == nil || baseURL.String() == "" {
-		err = errors.New("No base Landsat S3 bucker folder could be parsed")
+		err = errors.New("No base Landsat S3 bucket folder could be parsed")
 	}
 	if err != nil {
 		return nil, err
