@@ -67,7 +67,7 @@ type landsatSuffixDestination struct {
 
 // NewLandsatS3Bands creates a new LandsatS3Bands by inferring the bands based on
 // Landsat bucket info
-func NewLandsatS3Bands(bucketFolderURL string, id string) (*LandsatS3Bands, error) {
+func NewLandsatS3Bands(bucketFolderURL string, filePrefix string) (*LandsatS3Bands, error) {
 	baseURL, err := url.Parse(bucketFolderURL)
 	if baseURL == nil || baseURL.String() == "" {
 		err = errors.New("No base Landsat S3 bucket folder could be parsed")
@@ -93,7 +93,7 @@ func NewLandsatS3Bands(bucketFolderURL string, id string) (*LandsatS3Bands, erro
 	}
 
 	for _, dest := range suffixes {
-		filename := fmt.Sprintf("%s_%s.TIF", id, dest.BandSuffix)
+		filename := fmt.Sprintf("%s_%s.TIF", filePrefix, dest.BandSuffix)
 		fileURL, _ := url.Parse("./" + filename)
 		*dest.Destination = *baseURL.ResolveReference(fileURL)
 	}

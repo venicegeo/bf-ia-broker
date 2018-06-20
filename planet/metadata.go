@@ -44,11 +44,11 @@ func GetItemWithAssetMetadata(context *Context, options MetadataOptions) (*geojs
 
 	case "Landsat8L1G":
 		// Landsat imagery is hosted on an external S3 archive
-		folderURL, _, err := landsat.GetSceneFolderURL(basicResult.ID, basicResult.DataType)
+		folderURL, prefix, err := landsat.GetSceneFolderURL(basicResult.ID, basicResult.DataType)
 		if err != nil {
 			return nil, err
 		}
-		landsatBands, err := model.NewLandsatS3Bands(folderURL, basicResult.ID)
+		landsatBands, err := model.NewLandsatS3Bands(folderURL, prefix)
 		if err != nil {
 			return nil, err
 		}
