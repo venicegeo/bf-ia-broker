@@ -46,7 +46,7 @@ node() {
 
 
             // Wait for a line containing "Exit status" to signify completion
-            sh "cf logs '${appName}' | awk '/APP\/TASK\/landsat_ingest/ {print $0} /APP\/TASK\/landsat_ingest.*Exit status/ {exit}'"
+            sh "cf logs '${appName}' | awk '/APP\\/TASK\\/landsat_ingest/ {print \$0} /APP\\/TASK\\/landsat_ingest.*Exit status/ {exit}'"
           }
         }
       }
