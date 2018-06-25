@@ -22,15 +22,15 @@ node() {
     tidesUrl = "https://bf-tideprediction.${env.PROMOTE_DOMAIN}/tides"
   }
 
-  if(!fileExists('.cf')) {
-    sh "mkdir -p .cf"
-  }
-
   def cfSpaces = ["${env.PHASE_ONE_PCF_SPACE}", "${env.PHASE_TWO_PCF_SPACE}", "${env.PROD_PCF_SPACE}"]
 
   for (String cfSpace : cfSpaces) {
     if (cfSpace != null) {
       stage("Ingest - ${cfSpace}") {
+        if(!fileExists("${root}/.cf")) {
+          sh "mkdir -p ${root}/.cf"
+        }
+
         // Run the CF Task to start the Landsat Ingest Job from the IA-Broker
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${env.PCF_CREDS}", usernameVariable: "CFUSER", passwordVariable: "CFPASS"]]) {
           sh """
