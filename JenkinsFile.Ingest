@@ -37,7 +37,7 @@ node() {
             sh """
               cf api ${env.PCF_API_ENDPOINT}
               cf auth ${CFUSER} ${CFPASS}
-              cf target -s ${cfSpace}
+              cf target -o ${env.PCF_ORG} -s ${cfSpace}
             """
             // Get the name of the current running IA-Broker application
             def appName = sh(script: "cf apps | grep 'bf-ia-broker' | cut -f1 -d ' ' ", returnStdout: true).trim()
