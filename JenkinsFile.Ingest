@@ -44,8 +44,9 @@ node() {
             // Run the Ingest Task
             sh "cf run-task '${appName}' './bf-ia-broker.bin landsat_ingest' -k 512M -m 1G --name landsat_ingest"
 
+
             // Wait for a line containing "Exit status" to signify completion
-            sh "(cf logs '${appName}' --recent & cf logs '${appName}') | grep APP/TASK/landsat_ingest | awk '{print \$0} /APP\\/TASK\\/landsat_ingest.*Exit status/ { exit }'"
+            sh "cf logs '${appName}' | awk '/APP\/TASK\/landsat_ingest/ {print $0} /APP\/TASK\/landsat_ingest.*Exit status/ {exit}'"
           }
         }
       }
