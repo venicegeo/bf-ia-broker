@@ -1,10 +1,12 @@
 package db
 
 import (
+	"bytes"
 	"compress/gzip"
 	"database/sql"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -161,7 +163,12 @@ func openReader(scenesURL string) (io.ReadCloser, error) {
 		if netErr != nil {
 			return nil, netErr
 		}
-		return archiveResponse.Body, nil
+		defer archiveResponse.Body.Close()
+
+		//Download the whole body so we don't need to keep the connection open
+		bodyData, _ := ioutil.ReadAll(archiveResponse.Body)
+
+		return ioutil.NopCloser(bytes.NewBuffer(bodyData)), nil
 	}
 
 	//Treat this as a file.
