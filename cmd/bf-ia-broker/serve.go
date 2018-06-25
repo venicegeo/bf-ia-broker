@@ -59,8 +59,8 @@ func createRouter(ctx util.LogContext) (*mux.Router, error) {
 		return nil, err
 	}
 
-	if landsatLocalXYZTileHandler, err := landsatlocalindex.NewXYZTileHandler(getDbConnectionFunc); err == nil {
-		router.Handle("/localindex/tiles/landsat_pds/{id}/{Z}/{X}/{Y}.jpg", landsatLocalXYZTileHandler)
+	if landsatLocalXYZTileHandler, err := landsatlocalindex.NewPreviewImageHandler(getDbConnectionFunc); err == nil {
+		router.Handle("/localindex/preview/landsat_pds/{id}.jpg", landsatLocalXYZTileHandler)
 	} else {
 		return nil, err
 	}

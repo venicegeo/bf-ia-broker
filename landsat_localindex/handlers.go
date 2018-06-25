@@ -200,32 +200,32 @@ func (h MetadataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(feature.String()))
 }
 
-// XYZTileHandler is a handler for /localindex/tiles/landsat/{id}/{Z}/{X}/{Y}.jpg
-// @Title localIndexXYZTileHandler
+// PreviewImageHandler is a handler for /localindex/preview/landsat/{id}.jpg
+// @Title localIndexPreviewImageHandler
 // @Description performs a redirect to the correct AWS-hosted map tile
 // @Accept  plain
 // @Success 302 redirect to actual image
 // @Failure 400 {object}  string
-// @Router /localindex/tiles/landsat/{id}/{Z}/{X}/Y.jpg [get]
-type XYZTileHandler struct {
+// @Router /localindex/preview/landsat/{id}.jpg [get]
+type PreviewImageHandler struct {
 	Context Context
 }
 
-// NewXYZTileHandler creates a new handler using the environment and given DB
-func NewXYZTileHandler(connectionProvider db.ConnectionProvider) (*XYZTileHandler, error) {
+// NewPreviewImageHandler creates a new handler using the environment and given DB
+func NewPreviewImageHandler(connectionProvider db.ConnectionProvider) (*PreviewImageHandler, error) {
 	db, err := connectionProvider(&util.BasicLogContext{})
 	if err != nil {
 		return nil, err
 	}
 
-	return &XYZTileHandler{
+	return &PreviewImageHandler{
 		Context: Context{
 			DB: db,
 		},
 	}, nil
 }
 
-func (h XYZTileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h PreviewImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	sceneID, ok := mux.Vars(r)["id"]
 	if !ok {
 		message := "No scene ID found in URL"
