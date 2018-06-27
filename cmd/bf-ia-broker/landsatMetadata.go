@@ -15,7 +15,6 @@ corner_ul IS NULL OR
 corner_ur IS NULL OR  
 corner_ll IS NULL OR 
 corner_lr IS NULL 
-LIMIT 50
 `
 
 const insertSQL = `
