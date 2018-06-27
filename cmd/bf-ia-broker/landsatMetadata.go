@@ -20,10 +20,10 @@ LIMIT 50
 
 const insertSQL = `
 UPDATE scenes SET 
-	corner_ul = st_MakePoint($2, $3), 
-	corner_ur = st_MakePoint($4, $5),
-	corner_ll = st_MakePoint($6, $7),
-	corner_lr = st_MakePoint($8, $9)
+	corner_ul = st_setSRID( st_MakePoint($2, $3), 4326), 
+	corner_ur = st_setSRID( st_MakePoint($4, $5), 4326),
+	corner_ll = st_setSRID(st_MakePoint($6, $7), 4326),
+	corner_lr = st_setSRID( st_MakePoint($8, $9), 4326)
 WHERE product_id = $1
 `
 
@@ -106,10 +106,10 @@ func landsatPopulateMetadata(*cli.Context) {
 
 func insertMetadata(stmt *sql.Stmt, scene *sceneMetadata) {
 	_, err := stmt.Exec(scene.productID,
-		scene.metadata.Bounds.Coordinates[0][0][1], scene.metadata.Bounds.Coordinates[0][0][0],
-		scene.metadata.Bounds.Coordinates[0][1][1], scene.metadata.Bounds.Coordinates[0][1][0],
-		scene.metadata.Bounds.Coordinates[0][2][1], scene.metadata.Bounds.Coordinates[0][2][0],
-		scene.metadata.Bounds.Coordinates[0][3][1], scene.metadata.Bounds.Coordinates[0][3][0],
+		scene.metadata.Bounds.Coordinates[0][0][0], scene.metadata.Bounds.Coordinates[0][0][1],
+		scene.metadata.Bounds.Coordinates[0][1][0], scene.metadata.Bounds.Coordinates[0][1][1],
+		scene.metadata.Bounds.Coordinates[0][2][0], scene.metadata.Bounds.Coordinates[0][2][1],
+		scene.metadata.Bounds.Coordinates[0][3][0], scene.metadata.Bounds.Coordinates[0][3][1],
 	)
 	if err != nil {
 		log.Printf("Error inserting values.")
