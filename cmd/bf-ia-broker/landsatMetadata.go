@@ -47,7 +47,7 @@ func landsatPopulateMetadata(*cli.Context) {
 	//Create the statement to inser the info into the database.
 	insertStmt, err := conn.Prepare(insertSQL)
 	if err != nil {
-		log.Fatal("Error preparing insert statement.")
+		log.Fatal("Error preparing insert statement: " + err.Error())
 	}
 	defer insertStmt.Close()
 
@@ -121,7 +121,7 @@ func downloadWorker(scenesChan chan *sceneRow, responseChan chan *sceneMetadata,
 			productID: scene.productID,
 		}
 
-		log.Printf(scene.productID)
+		log.Printf("Getting scene metadata %s", scene.productID)
 		var err error
 		result.metadata, err = metadata.GetLandsatS3SceneMetadata(scene.productID, scene.url)
 
