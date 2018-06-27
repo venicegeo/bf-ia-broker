@@ -27,11 +27,11 @@ func GetLandsatS3SceneMetadata(sceneID string, sceneURL string) (*LandsatSceneMe
 
 	return &LandsatSceneMetadata{
 		Bounds: geojson.NewPolygon([][][]float64{[][]float64{
-			[]float64{pm.CornerUpperLeftLon, pm.CornerLowerLeftLat},
+			[]float64{pm.CornerUpperLeftLon, pm.CornerUpperLeftLat},
 			[]float64{pm.CornerUpperRightLon, pm.CornerUpperRightLat},
 			[]float64{pm.CornerLowerRightLon, pm.CornerLowerRightLat},
 			[]float64{pm.CornerLowerLeftLon, pm.CornerLowerLeftLat},
-			[]float64{pm.CornerUpperLeftLon, pm.CornerLowerLeftLat},
+			[]float64{pm.CornerUpperLeftLon, pm.CornerUpperLeftLat},
 		}}),
 	}, nil
 }
