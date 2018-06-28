@@ -72,7 +72,7 @@ func (h DiscoverHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		ccStr      string
 		cloudCover float64
 	)
-	util.LogAudit(&h.Context, util.LogAuditInput{Actor: "anon user", Action: request.Method, Actee: request.URL.String(), Message: "Receiving /discover request", Severity: util.INFO})
+	util.LogAudit(&h.Context, util.LogAuditInput{Actor: "anon user", Action: request.Method, Actee: request.URL.String(), Message: "Receiving /planet/discover request", Severity: util.INFO})
 
 	if util.Preflight(writer, request, &h.Context) {
 		return
@@ -152,7 +152,7 @@ func (h DiscoverHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 	}
 	writer.Header().Set("Content-Type", "application/json")
 	writer.Write(bytes)
-	util.LogAudit(&h.Context, util.LogAuditInput{Actor: "anon user", Action: request.Method + " response", Actee: request.URL.String(), Message: "Sending /discover response", Severity: util.INFO})
+	util.LogAudit(&h.Context, util.LogAuditInput{Actor: "anon user", Action: request.Method + " response", Actee: request.URL.String(), Message: "Sending /planet/discover response", Severity: util.INFO})
 
 }
 
