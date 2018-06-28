@@ -180,7 +180,7 @@ func (h MetadataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	metadata, err := getMetadata(tx, h.Context, sceneID, tides)
 	if err == sql.ErrNoRows {
 		message := fmt.Sprintf("Scene not found: %s", sceneID)
-		util.LogInfo(&h.Context, message)
+		util.LogSimpleErr(&h.Context, message, nil)
 		util.HTTPError(r, w, &h.Context, message, http.StatusNotFound)
 		tx.Rollback()
 		return
@@ -256,7 +256,7 @@ func (h PreviewImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	thumbURL, err := getThumbURLForSceneID(tx, sceneID)
 	if err == sql.ErrNoRows {
 		message := fmt.Sprintf("Scene not found: %s", sceneID)
-		util.LogInfo(&h.Context, message)
+		util.LogSimpleErr(&h.Context, message, nil)
 		util.HTTPError(r, w, &h.Context, message, http.StatusNotFound)
 		tx.Rollback()
 		return
