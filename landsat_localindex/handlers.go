@@ -49,6 +49,8 @@ func NewDiscoverHandler(connectionProvider db.ConnectionProvider) (*DiscoverHand
 
 // ServeHTTP implements the http.Handler interface for the DiscoverHandler type
 func (h DiscoverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	util.LogAudit(&h.Context, util.LogAuditInput{Actor: "anon user", Action: r.Method, Actee: r.URL.String(), Message: "Receiving /localindex/discover request", Severity: util.INFO})
+
 	tx, err := h.Context.DB.Begin()
 	if err != nil {
 		message := fmt.Sprintf("Could not begin DB transaction: %v", err)
@@ -119,6 +121,8 @@ func (h DiscoverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(featureCollection.String()))
+
+	util.LogAudit(&h.Context, util.LogAuditInput{Actor: "anon user", Action: r.Method + " response", Actee: r.URL.String(), Message: "Sending /localindex/discover response", Severity: util.INFO})
 }
 
 // MetadataHandler is a handler for /localindex/landsat/{id}
@@ -152,6 +156,8 @@ func NewMetadataHandler(connectionProvider db.ConnectionProvider) (*MetadataHand
 }
 
 func (h MetadataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	util.LogAudit(&h.Context, util.LogAuditInput{Actor: "anon user", Action: r.Method, Actee: r.URL.String(), Message: "Receiving /localindex/landsat_pds/{id} request", Severity: util.INFO})
+
 	sceneID, ok := mux.Vars(r)["id"]
 	if !ok {
 		message := "No scene ID found in URL"
@@ -174,7 +180,7 @@ func (h MetadataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	metadata, err := getMetadata(tx, h.Context, sceneID, tides)
 	if err == sql.ErrNoRows {
 		message := fmt.Sprintf("Scene not found: %s", sceneID)
-		util.LogInfo(&h.Context, message)
+		util.LogSimpleErr(&h.Context, message, nil)
 		util.HTTPError(r, w, &h.Context, message, http.StatusNotFound)
 		tx.Rollback()
 		return
@@ -198,6 +204,8 @@ func (h MetadataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(feature.String()))
+
+	util.LogAudit(&h.Context, util.LogAuditInput{Actor: "anon user", Action: r.Method + " response", Actee: r.URL.String(), Message: "Sending /localindex/landsat_pds/{id} response", Severity: util.INFO})
 }
 
 // PreviewImageHandler is a handler for /localindex/preview/landsat/{id}.jpg
@@ -226,6 +234,8 @@ func NewPreviewImageHandler(connectionProvider db.ConnectionProvider) (*PreviewI
 }
 
 func (h PreviewImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	util.LogAudit(&h.Context, util.LogAuditInput{Actor: "anon user", Action: r.Method, Actee: r.URL.String(), Message: "Receiving /localindex/preview/landsat_pds/{id} request", Severity: util.INFO})
+
 	sceneID, ok := mux.Vars(r)["id"]
 	if !ok {
 		message := "No scene ID found in URL"
@@ -246,7 +256,7 @@ func (h PreviewImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	thumbURL, err := getThumbURLForSceneID(tx, sceneID)
 	if err == sql.ErrNoRows {
 		message := fmt.Sprintf("Scene not found: %s", sceneID)
-		util.LogInfo(&h.Context, message)
+		util.LogSimpleErr(&h.Context, message, nil)
 		util.HTTPError(r, w, &h.Context, message, http.StatusNotFound)
 		tx.Rollback()
 		return
@@ -261,4 +271,6 @@ func (h PreviewImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Location", thumbURL.String())
 	w.WriteHeader(http.StatusFound)
+
+	util.LogAudit(&h.Context, util.LogAuditInput{Actor: "anon user", Action: r.Method + " response", Actee: r.URL.String(), Message: "Sending /localindex/preview/landsat_pds/{id} response", Severity: util.INFO})
 }

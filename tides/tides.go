@@ -42,10 +42,10 @@ func toTidesIn(features []*geojson.Feature, context util.LogContext) (result Inp
 	for _, feature := range features {
 		currTideIn := toTideIn(feature.ForceBbox(), feature.PropertyString("acquiredDate"))
 		if currTideIn == nil {
-			util.LogInfo(context, fmt.Sprintf("Could not get tide information from feature %v because required elements did not exist. BBOX: %#v, Date: %v",
+			util.LogSimpleErr(context, fmt.Sprintf("Could not get tide information from feature %v because required elements did not exist. BBOX: %#v, Date: %v",
 				feature.IDStr(),
 				feature.ForceBbox(),
-				feature.PropertyString("acquiredDate")))
+				feature.PropertyString("acquiredDate")), nil)
 			continue
 		}
 		result.Locations = append(result.Locations, *currTideIn)

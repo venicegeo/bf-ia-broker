@@ -2,21 +2,16 @@ package landsatlocalindex
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/venicegeo/bf-ia-broker/landsat_localindex/db"
 	"github.com/venicegeo/bf-ia-broker/model"
 	"github.com/venicegeo/bf-ia-broker/tides"
-	"github.com/venicegeo/bf-ia-broker/util"
 	"github.com/venicegeo/geojson-go/geojson"
 )
 
 func discoverScenes(tx *sql.Tx, ctx Context, bbox geojson.BoundingBox,
 	maxCloudCover float64, minAcquiredDate time.Time, maxAcquiredDate time.Time, withTides bool) (model.GeoJSONFeatureCollectionCreator, error) {
-	util.LogInfo(&ctx, fmt.Sprintf("Discovering scenes for bbox=%v maxCloudCover=%v minAcquiredDate=%v maxAcquiredDate=%v, withTides=%v",
-		bbox.String(), maxCloudCover, minAcquiredDate, maxAcquiredDate, withTides,
-	))
 	scenes, err := db.SearchScenes(tx, bbox, maxCloudCover, minAcquiredDate, maxAcquiredDate)
 	if err != nil {
 		return nil, err
