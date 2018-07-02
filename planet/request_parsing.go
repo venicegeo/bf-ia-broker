@@ -86,14 +86,18 @@ func planetSearchBrokerResultFromFeature(feature *geojson.Feature) (*model.Broke
 // planetAssetMetadataFromAssets constructs a PlanetAssetMetadata by extracting
 // data from a planet.Assets response container
 func planetAssetMetadataFromAssets(assets Assets) (*model.PlanetAssetMetadata, error) {
+	var err error
 	if assets.Analytic.Type == "" {
 		// No data means just return nil
 		return nil, nil
 	}
 
-	expiresAt, err := time.Parse(model.PlanetTimeFormat, assets.Analytic.ExpiresAt)
-	if err != nil {
-		return nil, err
+	expiresAt := time.Time{}
+	if assets.Analytic.ExpiresAt != "" {
+		expiresAt, err = time.Parse(model.PlanetTimeFormat, assets.Analytic.ExpiresAt)
+		if err != nil {
+			return nil, err
+		}
 	}
 	permissionsCopy := append([]string{}, assets.Analytic.Permissions...)
 
