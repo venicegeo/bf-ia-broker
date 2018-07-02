@@ -128,7 +128,8 @@ func downloadWorker(scenesChan chan *sceneRow, responseChan chan *sceneMetadata,
 		result.metadata, err = metadata.GetLandsatS3SceneMetadata(scene.productID, scene.url)
 
 		if err != nil {
-			log.Printf("Error getting metadata.")
+			log.Printf("Error getting metadata, id=%s, url=%s", scene.productID, scene.url)
+			continue
 		}
 
 		responseChan <- &result
