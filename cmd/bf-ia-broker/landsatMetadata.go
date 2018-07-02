@@ -97,7 +97,8 @@ func landsatPopulateMetadata(*cli.Context) {
 	//Read the responses and write them into the database.
 	for meta := range responseQueue {
 		insertMetadata(insertStmt, meta)
-		log.Printf("Done " + meta.productID)
+		// Commented to squelch log spam
+		//log.Printf("Done " + meta.productID)
 	}
 
 	log.Printf("Done")
@@ -121,7 +122,8 @@ func downloadWorker(scenesChan chan *sceneRow, responseChan chan *sceneMetadata,
 			productID: scene.productID,
 		}
 
-		log.Printf("Getting scene metadata %s", scene.productID)
+		// Commented to squelch log spam
+		//log.Printf("Getting scene metadata %s", scene.productID)
 		var err error
 		result.metadata, err = metadata.GetLandsatS3SceneMetadata(scene.productID, scene.url)
 
