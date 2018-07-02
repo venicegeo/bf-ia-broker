@@ -16,6 +16,7 @@ type BasicBrokerResult struct {
 	SensorName   string
 	FileFormat   BrokerFileFormat
 	DataType     string
+	BoundingBox  geojson.BoundingBox
 }
 
 // GeoJSONFeature implements the GeoJSONFeatureCreator interface
@@ -26,7 +27,11 @@ func (br BasicBrokerResult) GeoJSONFeature() (*geojson.Feature, error) {
 		"acquiredDate": br.AcquiredDate.Format(PlanetTimeFormat),
 		"sensorName":   br.SensorName,
 	})
-	f.Bbox = f.ForceBbox()
+	if br.BoundingBox != nil {
+		f.Bbox = br.BoundingBox
+	} else {
+		f.Bbox = f.ForceBbox()
+	}
 	return f, nil
 }
 

@@ -55,6 +55,7 @@ func brokerSearchResultFromScene(scene db.LandsatLocalIndexScene) model.BrokerSe
 			SensorName:   "Landsat8L1TP", // XXX: hardcoded
 			FileFormat:   model.GeoTIFF,
 			Geometry:     scene.Bounds,
+			BoundingBox:  scene.BoundingBox,
 			DataType:     "L1TP",
 		},
 	}

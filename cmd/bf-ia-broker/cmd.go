@@ -32,14 +32,19 @@ var commands = cli.Commands{
 		Action:  versionAction,
 	},
 	cli.Command{
-		Name:    "landsat_ingest_schedule",
-		Usage:   "Update the database with the latest landsat entries on a schedule",
-		Action:  landsatIngestScheduleAction,
+		Name:   "landsat_ingest_schedule",
+		Usage:  "Update the database with the latest landsat entries on a schedule",
+		Action: landsatIngestScheduleAction,
 	},
 	cli.Command{
-		Name:    "landsat_ingest",
-		Usage:   "One-time Update of the database with the latest landsat entries",
-		Action:  landsatIngestOnceAction,
+		Name:   "landsat_ingest",
+		Usage:  "One-time Update of the database with the latest landsat entries",
+		Action: landsatIngestOnceAction,
+	},
+	cli.Command{
+		Name:   "landsat_metadata",
+		Usage:  "Populates missing metadata for scenes.",
+		Action: landsatPopulateMetadata,
 	},
 	cli.Command{
 		Name:    "migrate",
