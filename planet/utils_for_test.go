@@ -32,6 +32,7 @@ import (
 const testingInvalidKey = "INVALID_KEY"
 const testingValidKey = "VALID_KEY"
 const testingValidItemID = "foobar123"
+const testingValidItemIDWithBadMetadata = "badmetadata54321"
 const testingValidSentinelID = "S2A_MSIL1C_20160513T183921_N0204_R070_T11SKD_20160513T185132"
 const testingValidItemType = "REOrthoTile"
 const testingValidSceneIDWithNoMetadata = "nometadata321"
@@ -40,6 +41,7 @@ var testingSampleSearchResult string
 var testingSampleFeatureResult string
 var testingSampleSentinelFeatureResult string
 var testingSampleAssetsResult string
+var testingSampleAssetsResultBadMetadata string
 var testingSampleActivateResult string
 
 func TestMain(m *testing.M) {
@@ -72,6 +74,10 @@ func initSampleTestingFiles() {
 	data, err = ioutil.ReadFile("testdata/testingSampleAssetsResult.json")
 	panicCheck(err)
 	testingSampleAssetsResult = strings.Replace(string(data), "https://api.planet.com", "++API_URL_PLACEHOLDER++", -1)
+
+	data, err = ioutil.ReadFile("testdata/testingSampleAssetsResult-BadMetadata.json")
+	panicCheck(err)
+	testingSampleAssetsResultBadMetadata = strings.Replace(string(data), "https://api.planet.com", "++API_URL_PLACEHOLDER++", -1)
 
 	data, err = ioutil.ReadFile("testdata/testingSampleActivateResult.json")
 	panicCheck(err)
@@ -162,7 +168,7 @@ func createMockPlanetAPIServer() (server *httptest.Server) {
 		itemType := mux.Vars(request)["itemType"]
 		itemID := mux.Vars(request)["itemID"]
 
-		validID := itemID == testingValidItemID || itemID == testingValidSceneIDWithNoMetadata
+		validID := itemID == testingValidItemID || itemID == testingValidSceneIDWithNoMetadata || itemID == testingValidItemIDWithBadMetadata
 
 		if itemType == "" || !validID {
 			writer.WriteHeader(404)
@@ -174,6 +180,9 @@ func createMockPlanetAPIServer() (server *httptest.Server) {
 
 		if itemID == testingValidSceneIDWithNoMetadata {
 			writer.Write([]byte("{}"))
+		} else if itemID == testingValidItemIDWithBadMetadata {
+			result := strings.Replace(testingSampleAssetsResultBadMetadata, "++API_URL_PLACEHOLDER++", server.URL, -1)
+			writer.Write([]byte(result))
 		} else {
 			result := strings.Replace(testingSampleAssetsResult, "++API_URL_PLACEHOLDER++", server.URL, -1)
 			writer.Write([]byte(result))

@@ -146,6 +146,18 @@ func TestGetMetadataBadAssetID(t *testing.T) {
 	}
 }
 
+func TestGetMetadataBadMetadata(t *testing.T) {
+	planetServer, tidesServer, _ := createTestFixtures()
+	context := makeTestingContext(planetServer, tidesServer)
+	aOptions := MetadataOptions{ID: testingValidItemIDWithBadMetadata, Tides: true, ItemType: "REOrthoTile"}
+
+	_, err := GetPlanetItem(aOptions, &context)
+	assert.NotNil(t, err, "Expected asset with bad metadata to fail, but it succeeded.")
+	if _, ok := err.(util.HTTPErr); err != nil && !ok {
+		t.Errorf("Expected an HTTPErr, got a %T", err)
+	}
+}
+
 func TestGetAssetNoDataFromPlanet(t *testing.T) {
 	// Sometimes planet responds with a plain `{}` to a scene asset request
 	// This needs to be handled properly, returning a 502 error

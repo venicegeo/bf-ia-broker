@@ -1,0 +1,10 @@
+{
+    "analytic": {
+        "_permissions": [
+            "download"
+        ],
+        "md5_digest": "98ef8fea7f91d66c2a7cd8ce02af25ae",
+        "status": "active",
+        "type": "analytic"
+    }
+}
