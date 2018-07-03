@@ -109,9 +109,6 @@ func planetAssetMetadataFromAssets(assets Assets) (*model.PlanetAssetMetadata, e
 		return nil, err
 	}
 	activationURL, err := url.Parse(assets.Analytic.Links.Activate)
-	if activationURL == nil || activationURL.String() == "" {
-		err = errors.New("No asset activation URL parsed")
-	}
 	if err != nil {
 		return nil, err
 	}

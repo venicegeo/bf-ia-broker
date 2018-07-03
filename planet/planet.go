@@ -146,8 +146,18 @@ func GetPlanetAssets(options MetadataOptions, context *Context) (*model.PlanetAs
 	log.Print(assetMetadata)
 	log.Print(err)
 
-	if err == nil && assetMetadata == nil && (options.ItemType == "REOrthoTile" || options.ItemType == "PSOrthoTile") {
-		err = errors.New("Found no asset data in response for item type requiring asset data")
+	if err == nil && itemTypeRequiresActivation(options.ItemType) {
+		if assetMetadata == nil {
+			err = errors.New("Found no asset data in response for item type requiring asset activation")
+		} else if assetMetadata.ActivationURL.String() == "" {
+			err = errors.New("Found no asset activation URL for item type requiring asset activation")
+		} else if assetMetadata.Status == "active" {
+			if assetMetadata.AssetURL.String() == "" {
+				err = errors.New("Found no asset URL for supposedly active item")
+			} else if assetMetadata.ExpiresAt.IsZero() {
+				err = errors.New("Found no expiration time for supposedly active item")
+			}
+		}
 	}
 
 	if err != nil {
@@ -270,4 +280,15 @@ func planetRequest(input planetRequestInput, context *Context) (*http.Response, 
 	util.LogAudit(context, util.LogAuditInput{Actor: "planet/doRequest", Action: input.method, Actee: inputURL, Message: message, Severity: util.INFO})
 	util.LogAudit(context, util.LogAuditInput{Actor: inputURL, Action: input.method + " response", Actee: "planet/doRequest", Message: "Receiving data from Planet API", Severity: util.INFO})
 	return util.HTTPClient().Do(request)
+}
+
+func itemTypeRequiresActivation(itemType string) bool {
+	switch itemType {
+	case "REOrthoTile":
+		fallthrough
+	case "PSOrthoTile":
+		return true
+	default:
+		return false
+	}
 }
