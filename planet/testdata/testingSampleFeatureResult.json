@@ -33,7 +33,7 @@
   },
   "id": "foobar123",
   "properties": {
-    "acquired": "2006-01-02T15:04:05Z",
+    "acquired": "2006-01-02T15:04:05",
     "cloud_cover": 0.5,
     "currentTide": 1.0,
     "gsd": 6.5,

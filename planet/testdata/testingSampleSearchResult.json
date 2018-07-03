@@ -1,5 +1,5 @@
 {
-  "acquiredDate": "2006-01-02T15:04:05Z",
+  "acquiredDate": "2006-01-02T15:04:05",
   "bbox": [
     100.0,
     0.0,
@@ -42,7 +42,7 @@
       },
       "id": "foobar123",
       "properties": {
-        "acquired": "2006-01-02T15:04:05Z",
+        "acquired": "2006-01-02T15:04:05",
         "cloud_cover": 0.5,
         "currentTide": 1.0,
         "gsd": 6.5,
@@ -85,7 +85,7 @@
       },
       "id": "LC80220272017107LGN00",
       "properties": {
-        "acquired": "2017-04-17T16:26:45.393803Z",
+        "acquired": "2017-04-17T16:26:45.393803",
         "anomalous_pixels": 0,
         "cloud_cover": 0.783,
         "columns": 7711,
@@ -98,13 +98,13 @@
         "origin_y": 5374515,
         "pixel_resolution": 30,
         "provider": "usgs",
-        "published": "2017-04-19T17:56:53Z",
+        "published": "2017-04-19T17:56:53",
         "quality_category": "standard",
         "rows": 7841,
         "satellite_id": "Landsat8",
         "sun_azimuth": 151.7,
         "sun_elevation": 50.3,
-        "updated": "2017-04-19T17:56:53Z",
+        "updated": "2017-04-19T17:56:53",
         "usable_data": 0.675,
         "view_angle": 0,
         "wrs_path": 22,
