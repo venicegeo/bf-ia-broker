@@ -34,15 +34,11 @@ func GetSceneByID(tx *sql.Tx, productID string) (*LandsatLocalIndexScene, error)
 		return nil, err
 	}
 
-	scene.Bounds, err = geojson.PolygonFromBytes(wrsBoundsBytes)
-	if err != nil {
-		return nil, err
-	}
-
 	mtlBounds, err := geojson.PolygonFromBytes(mtlBoundsBytes)
 	if err != nil {
 		return nil, err
 	}
+	scene.Bounds = mtlBounds
 	scene.BoundingBox = mtlBounds.ForceBbox()
 
 	return &scene, nil
@@ -77,13 +73,11 @@ func SearchScenes(tx *sql.Tx, bbox geojson.BoundingBox, maxCloudCover float64, m
 			return nil, err
 		}
 
-		if scene.Bounds, err = geojson.PolygonFromBytes(wrsBoundsBytes); err != nil {
-			return nil, err
-		}
 		mtlBounds, err := geojson.PolygonFromBytes(mtlBoundsBytes)
 		if err != nil {
 			return nil, err
 		}
+		scene.Bounds = mtlBounds
 		scene.BoundingBox = mtlBounds.ForceBbox()
 
 		results = append(results, scene)
