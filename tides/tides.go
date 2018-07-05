@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/venicegeo/bf-ia-broker/model"
 	"github.com/venicegeo/bf-ia-broker/util"
 	"github.com/venicegeo/geojson-go/geojson"
 )
@@ -31,7 +32,7 @@ func toTideIn(bbox geojson.BoundingBox, timeStr string) *InputLocation {
 	if center = bbox.Centroid(); center == nil {
 		return nil
 	}
-	if dtgTime, err = time.Parse("2006-01-02T15:04:05Z", timeStr); err != nil {
+	if dtgTime, err = model.ParsePlanetTime(timeStr); err != nil {
 		return nil
 	}
 	return &InputLocation{Lat: center.Coordinates[1], Lon: center.Coordinates[0], Dtg: dtgTime.Format("2006-01-02-15-04")}

@@ -15,7 +15,7 @@ func TestPlanetAssetMetadataFromAssets_Success(t *testing.T) {
 	validAssets := Assets{
 		Analytic: Asset{
 			Location:    "https://example.localdomain/path/to/asset.JP2",
-			ExpiresAt:   mockExpiresAt.Format(model.PlanetTimeFormat),
+			ExpiresAt:   mockExpiresAt.Format(model.StandardTimeLayout),
 			Permissions: []string{"a", "b", "c"},
 			Status:      "active",
 			Type:        "test",
@@ -56,7 +56,7 @@ func TestPlanetAssetMetadataFromAssets_Error(t *testing.T) {
 		Analytic: Asset{
 			Type:      "REOrthoTile",
 			Location:  "",
-			ExpiresAt: time.Unix(123, 0).Format(model.PlanetTimeFormat),
+			ExpiresAt: time.Unix(123, 0).Format(model.StandardTimeLayout),
 			Links: Links{
 				Activate: "https://example.localdomain/path/to/activate",
 			},
@@ -79,7 +79,7 @@ func TestBasicBrokerResultFromPlanetFeature_MissingCloudCover(t *testing.T) {
 	// Mock
 	mockAcquired := time.Unix(123, 0).UTC()
 	feature := geojson.NewFeature([]float64{}, "test-id", map[string]interface{}{
-		"acquired": mockAcquired.Format(model.PlanetTimeFormat),
+		"acquired": mockAcquired.Format(model.StandardTimeLayout),
 	})
 
 	// Tested Code
@@ -95,7 +95,7 @@ func TestBasicBrokerResultFromPlanetFeature_ZeroCloudCover(t *testing.T) {
 	// Mock
 	mockAcquired := time.Unix(123, 0).UTC()
 	feature := geojson.NewFeature([]float64{}, "test-id", map[string]interface{}{
-		"acquired":    mockAcquired.Format(model.PlanetTimeFormat),
+		"acquired":    mockAcquired.Format(model.StandardTimeLayout),
 		"cloud_cover": 0.0,
 	})
 
@@ -112,7 +112,7 @@ func TestBasicBrokerResultFromPlanetFeature_NonZeroCloudCover(t *testing.T) {
 	// Mock
 	mockAcquired := time.Unix(123, 0).UTC()
 	feature := geojson.NewFeature([]float64{}, "test-id", map[string]interface{}{
-		"acquired":    mockAcquired.Format(model.PlanetTimeFormat),
+		"acquired":    mockAcquired.Format(model.StandardTimeLayout),
 		"cloud_cover": 0.123,
 	})
 

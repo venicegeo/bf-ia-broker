@@ -24,7 +24,7 @@ func (br BasicBrokerResult) GeoJSONFeature() (*geojson.Feature, error) {
 	f := geojson.NewFeature(br.Geometry, br.ID, map[string]interface{}{
 		"cloudCover":   br.CloudCover,
 		"resolution":   br.Resolution,
-		"acquiredDate": br.AcquiredDate.Format(PlanetTimeFormat),
+		"acquiredDate": br.AcquiredDate.Format(StandardTimeLayout),
 		"sensorName":   br.SensorName,
 	})
 	if br.BoundingBox != nil {

@@ -51,7 +51,7 @@ func planetRawBytesToFeatureCollection(context *Context, body []byte) (*geojson.
 }
 
 func basicBrokerResultFromPlanetFeature(feature *geojson.Feature, fileFormat model.BrokerFileFormat) (*model.BasicBrokerResult, error) {
-	acquiredDate, err := time.Parse(model.PlanetTimeFormat, feature.PropertyString("acquired"))
+	acquiredDate, err := model.ParsePlanetTime(feature.PropertyString("acquired"))
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func planetAssetMetadataFromAssets(assets Assets) (*model.PlanetAssetMetadata, e
 
 	expiresAt := time.Time{}
 	if assets.Analytic.ExpiresAt != "" {
-		expiresAt, err = time.Parse(model.PlanetTimeFormat, assets.Analytic.ExpiresAt)
+		expiresAt, err = model.ParsePlanetTime(assets.Analytic.ExpiresAt)
 		if err != nil {
 			return nil, err
 		}

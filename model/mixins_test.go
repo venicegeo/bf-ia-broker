@@ -29,7 +29,7 @@ func TestPlanetAssetMetadata_Apply(t *testing.T) {
 
 	// Asserts
 	assert.Nil(t, err)
-	assert.Equal(t, time.Unix(123, 0).Format(PlanetTimeFormat), feature.PropertyString("expires_at"))
+	assert.Equal(t, time.Unix(123, 0).Format(StandardTimeLayout), feature.PropertyString("expires_at"))
 	assert.Equal(t, "https://example.localdomain/path/to/asset.JP2", feature.PropertyString("location"))
 	assert.Equal(t, []string{"a", "b", "c"}, feature.PropertyStringSlice("permissions"))
 	assert.Equal(t, "active", feature.PropertyString("status"))
