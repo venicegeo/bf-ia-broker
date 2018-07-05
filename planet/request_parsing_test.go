@@ -52,27 +52,15 @@ func TestPlanetAssetMetadataFromAssets_Error(t *testing.T) {
 			},
 		},
 	}
-	noLocationAssets := Assets{
-		Analytic: Asset{
-			Type:      "REOrthoTile",
-			Location:  "",
-			ExpiresAt: time.Unix(123, 0).Format(model.StandardTimeLayout),
-			Links: Links{
-				Activate: "https://example.localdomain/path/to/activate",
-			},
-		},
-	}
 
 	// Tested code
 	emptyResult, emptyErr := planetAssetMetadataFromAssets(emptyAssets)
 	_, badTimeErr := planetAssetMetadataFromAssets(badTimeAssets)
-	_, noLocationErr := planetAssetMetadataFromAssets(noLocationAssets)
 
 	// Asserts
 	assert.Nil(t, emptyResult)
 	assert.Nil(t, emptyErr)
 	assert.NotNil(t, badTimeErr)
-	assert.NotNil(t, noLocationErr)
 }
 
 func TestBasicBrokerResultFromPlanetFeature_MissingCloudCover(t *testing.T) {
