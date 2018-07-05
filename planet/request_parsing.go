@@ -1,7 +1,6 @@
 package planet
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"time"
@@ -102,9 +101,6 @@ func planetAssetMetadataFromAssets(assets Assets) (*model.PlanetAssetMetadata, e
 	permissionsCopy := append([]string{}, assets.Analytic.Permissions...)
 
 	assetURL, err := url.Parse(assets.Analytic.Location)
-	if assetURL == nil || assetURL.String() == "" {
-		err = errors.New("No analytic asset location URL parsed")
-	}
 	if err != nil {
 		return nil, err
 	}
