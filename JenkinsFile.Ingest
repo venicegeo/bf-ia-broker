@@ -43,10 +43,7 @@ node() {
             def appName = sh(script: "cf apps | grep 'bf-ia-broker' | cut -f1 -d ' ' ", returnStdout: true).trim()
             // Run the Ingest Task
             sh "cf run-task '${appName}' './bf-ia-broker.bin landsat_ingest && ./bf-ia-broker.bin landsat_metadata' -k 512M -m 1G --name landsat_ingest"
-
-
-            // Wait for a line containing "Exit status" to signify completion
-            sh "cf logs '${appName}' | awk '/APP\\/TASK\\/landsat_ingest/ {print \$0} /APP\\/TASK\\/landsat_ingest.*Exit status/ {exit}'"
+            echo "CF task 'landsat_ingest' for app '${appName}' successfully started, monitor it via the CF console or log aggregation platform"
           }
         }
       }
