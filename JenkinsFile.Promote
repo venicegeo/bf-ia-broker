@@ -106,9 +106,9 @@ node {
       sh "cf map-route ${appName} apps.internal --hostname ${appBaseName}-${env.PROMOTE_SPACE}"
 
       // Assign Policies
-      def bfApi = sh(script: "cf routes | grep \"bf-api\" | awk '{print \$4}'", returnStdout: true)
+      def bfApi = sh(script: "cf routes | grep \"bf-api \" | awk '{print \$4}'", returnStdout: true).trim()
       sh "cf add-network-policy ${bfApi} --destination-app ${appName}"
-      def tidePrediction = sh(script: "cf routes | grep \"bf-tideprediction\" | awk '{print \$4}'", returnStdout: true)
+      def tidePrediction = sh(script: "cf routes | grep \"bf-tideprediction \" | awk '{print \$4}'", returnStdout: true).trim()
       sh "cf add-network-policy ${appName} --destination-app ${tidePrediction}"
 
       // Delete old Routes

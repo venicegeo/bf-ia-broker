@@ -101,9 +101,9 @@ node {
         sh "cf map-route ${deployAppName} apps.internal --hostname bf-ia-broker-${pcfSpace}"
         
         // Define policies
-        def bfApi = sh(script: "cf routes | grep \"bf-api\" | awk '{print \$4}'", returnStdout: true)
+        def bfApi = sh(script: "cf routes | grep \"bf-api \" | awk '{print \$4}'", returnStdout: true).trim()
         sh "cf add-network-policy ${bfApi} --destination-app ${deployAppName}"
-        def tidePrediction = sh(script: "cf routes | grep \"bf-tideprediction\" | awk '{print \$4}'", returnStdout: true)
+        def tidePrediction = sh(script: "cf routes | grep \"bf-tideprediction \" | awk '{print \$4}'", returnStdout: true).trim()
         sh "cf add-network-policy ${deployAppName} --destination-app ${tidePrediction}"
         
         // Remove legacy applications
