@@ -49,32 +49,32 @@ node {
           cf auth ${CFUSER} ${CFPASS}
           cf target -o ${env.PCF_ORG} -s ${pcfSpace}
           cf push ${deployAppName} -f manifest.jenkins.yml --hostname ${deployAppName} -d ${pcfDomain} -c 'sleep 5m' --health-check-type none
-		"""
-		try {
-			sh """
-			  cf set-env ${deployAppName} SPACE ${pcfSpace}
-			  cf set-env ${deployAppName} DOMAIN ${pcfDomain}
-			  cf set-env ${deployAppName} LANDSAT_HOST ${env.LANDSAT_HOST}
-			  cf set-env ${deployAppName} PL_API_URL ${env.PL_API_URL}
-			  cf set-env ${deployAppName} SENTINEL_HOST ${env.SENTINEL_HOST}
-			  cf set-env ${deployAppName} BF_TIDE_PREDICTION_URL ${tidesUrl}
-        cf set-env ${deployAppName} LANDSAT_INDEX_SCENES_URL ${env.LANDSAT_INDEX_SCENES_URL}
-        cf set-env ${deployAppName} LANDSAT_INGEST_FREQUENCY ${env.LANDSAT_INGEST_FREQUENCY}
-			"""
+        """
+        try {
+          sh """
+            cf set-env ${deployAppName} SPACE ${pcfSpace}
+            cf set-env ${deployAppName} DOMAIN ${pcfDomain}
+            cf set-env ${deployAppName} LANDSAT_HOST ${env.LANDSAT_HOST}
+            cf set-env ${deployAppName} PL_API_URL ${env.PL_API_URL}
+            cf set-env ${deployAppName} SENTINEL_HOST ${env.SENTINEL_HOST}
+            cf set-env ${deployAppName} BF_TIDE_PREDICTION_URL ${tidesUrl}
+            cf set-env ${deployAppName} LANDSAT_INDEX_SCENES_URL ${env.LANDSAT_INDEX_SCENES_URL}
+            cf set-env ${deployAppName} LANDSAT_INGEST_FREQUENCY ${env.LANDSAT_INGEST_FREQUENCY}
+          """
 
-      echo "Running database migration"
-      sh "cf restage ${deployAppName}"
-      sh "cf run-task ${deployAppName} './bf-ia-broker.bin migrate'"
+          echo "Running database migration"
+          sh "cf restage ${deployAppName}"
+          sh "cf run-task ${deployAppName} './bf-ia-broker.bin migrate'"
 
-      echo "Migration successful, starting app"
-			sh "cf push ${deployAppName} -f manifest.jenkins.yml --hostname ${deployAppName} -d ${pcfDomain} --health-check-type http"
-    } catch (Exception e) {
-      printLogsFailsafe deployAppName
-      sh "cf delete ${deployAppName} -f"
-      error("Error during application start. Deleting ${deployAppName} and failing the build.")
+          echo "Migration successful, starting app"
+          sh "cf push ${deployAppName} -f manifest.jenkins.yml --hostname ${deployAppName} -d ${pcfDomain} --health-check-type http"
+        } catch (Exception e) {
+          printLogsFailsafe deployAppName
+          sh "cf delete ${deployAppName} -f"
+          error("Error during application start. Deleting ${deployAppName} and failing the build.")
+        }
+      }
     }
-  }
-}
 
     if(!env.SKIP_SCANS.toBoolean()) {
       withCredentials([[$class: 'StringBinding', credentialsId: "${env.THREADFIX_API_KEY}", variable: "THREADFIX_KEY"]]) {
@@ -94,13 +94,24 @@ node {
           cf auth ${CFUSER} ${CFPASS}
           cf target -o ${env.PCF_ORG} -s ${pcfSpace}
         """
+        
+        // Define routes
         def legacyAppNames = sh(script: """cf routes | grep \"${appName} \" | awk '{print \$4}'""", returnStdout: true)
         sh "cf map-route ${deployAppName} ${pcfDomain} --hostname bf-ia-broker"
+        sh "cf map-route ${deployAppName} apps.internal --hostname bf-ia-broker-${pcfSpace}"
+        
+        // Define policies
+        def bfApi = sh(script: "cf routes | grep \"bf-api\" | awk '{print \$4}'", returnStdout: true)
+        sh "cf add-network-policy ${bfApi} --destination-app ${deployAppName}"
+        def tidePrediction = sh(script: "cf routes | grep \"bf-tideprediction\" | awk '{print \$4}'", returnStdout: true)
+        sh "cf add-network-policy ${deployAppName} --destination-app ${tidePrediction}"
+        
         // Remove legacy applications
         for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
           def legacyAppName = legacyApp.toString().trim()
           if(legacyAppName != appName && legacyAppName != deployAppName) {
             sh "cf unmap-route ${legacyAppName} ${pcfDomain} --hostname bf-ia-broker"
+            sh "cf unmap-route ${legacyAppName} apps.internal --hostname bf-ia-broker-${pcfSpace}"
             sh "cf delete -f ${legacyAppName} -r"
           }
         }
@@ -115,9 +126,9 @@ node {
     // Clone Test Repository
     withCredentials([file(credentialsId: "${POSTMAN_SECRET_FILE}", variable: 'POSTMAN_FILE')]) {
       withEnv([
-        "PATH+=${root}/integration-tests/node_modules/newman/bin:${nodejs}/bin",
-        "PCF_SPACE=${pcfSpace}", "HOME=${WORKSPACE}"
-        ]) {
+      "PATH+=${root}/integration-tests/node_modules/newman/bin:${nodejs}/bin",
+      "PCF_SPACE=${pcfSpace}", "HOME=${WORKSPACE}"
+      ]) {
         dir ("integration-tests") {
           if(env.INTEGRATION_GITLAB_CREDS) {
             git url: "${env.INTEGRATION_GIT_URL}", branch: "${env.INTEGRATION_GIT_BRANCH}", credentialsId: "${env.INTEGRATION_GITLAB_CREDS}"
@@ -141,9 +152,9 @@ node {
       git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
     }
     withEnv([
-      "PATH+=${golangTool}/bin:${root}/gopath/bin",
-      "GOROOT=${golangTool}",
-      "GOPATH=${root}/gopath"
+    "PATH+=${golangTool}/bin:${root}/gopath/bin",
+    "GOROOT=${golangTool}",
+    "GOPATH=${root}/gopath"
     ]) {
       sh """
         mkdir -p ${root}/gopath/bin ${root}/gopath/pkg ${root}/gopath/src
@@ -164,9 +175,9 @@ node {
   stage("Archive") {
     def archiveName = "${appName}.tar.gz"
     withEnv([
-      "PATH+=${golangTool}/bin:${root}/gopath/bin",
-      "GOROOT=${golangTool}",
-      "GOPATH=${root}/gopath"
+    "PATH+=${golangTool}/bin:${root}/gopath/bin",
+    "GOROOT=${golangTool}",
+    "GOPATH=${root}/gopath"
     ]) {
       sh """
         mkdir -p ${GOPATH}/src/github.com/venicegeo/bf-ia-broker

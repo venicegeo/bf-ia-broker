@@ -19,7 +19,7 @@ node() {
       env."${param.name}" = (param.type == "booleanParam") ? paramValueString.toBoolean() : paramValueString
     }
     appvers = "${env.PROMOTE_VERSION}"
-    tidesUrl = "https://bf-tideprediction.${env.PROMOTE_DOMAIN}/tides"
+    tidesUrl = "https://bf-tideprediction-${env.PROMOTE_SPACE}.apps.internal/tides"
   }
 
   def cfSpaces = ["${env.PHASE_ONE_PCF_SPACE}", "${env.PHASE_TWO_PCF_SPACE}", "${env.PROD_PCF_SPACE}"]
