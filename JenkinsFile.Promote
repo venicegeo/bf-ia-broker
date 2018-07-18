@@ -107,9 +107,9 @@ node {
 
       // Assign Policies
       def bfApi = sh(script: "cf routes | grep \"bf-api \" | awk '{print \$4}'", returnStdout: true).trim()
-      sh "cf add-network-policy ${bfApi} --destination-app ${appName} --protocol tcp --port 80"
+      sh "cf add-network-policy ${bfApi} --destination-app ${appName} --protocol tcp --port 8080"
       def tidePrediction = sh(script: "cf routes | grep \"bf-tideprediction \" | awk '{print \$4}'", returnStdout: true).trim()
-      sh "cf add-network-policy ${appName} --destination-app ${tidePrediction} --protocol tcp --port 80"
+      sh "cf add-network-policy ${appName} --destination-app ${tidePrediction} --protocol tcp --port 8080"
 
       // Delete old Routes
       for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
