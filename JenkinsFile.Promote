@@ -24,7 +24,7 @@ node {
       env."${param.name}" = (param.type == "booleanParam") ? paramValueString.toBoolean() : paramValueString
     }
     appvers = "${env.PROMOTE_VERSION}"
-    tidesUrl = "http://bf-tideprediction-${env.PROMOTE_SPACE}.apps.internal/tides"
+    tidesUrl = "http://bf-tideprediction-${env.PROMOTE_SPACE}.apps.internal:8080/tides"
   }
 
   if(!fileExists('.cf')) {
