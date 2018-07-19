@@ -101,10 +101,14 @@ node {
         sh "cf map-route ${deployAppName} apps.internal --hostname bf-ia-broker-${pcfSpace}"
         
         // Define policies
-        def bfApi = sh(script: "cf routes | grep \"bf-api \" | awk '{print \$4}'", returnStdout: true).trim()
-        sh "cf add-network-policy ${bfApi} --destination-app ${deployAppName} --protocol tcp --port 8080"
-        def tidePrediction = sh(script: "cf routes | grep \"bf-tideprediction \" | awk '{print \$4}'", returnStdout: true).trim()
-        sh "cf add-network-policy ${deployAppName} --destination-app ${tidePrediction} --protocol tcp --port 8080"
+        try {
+          def bfApi = sh(script: "cf routes | grep \"bf-api \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${bfApi} --destination-app ${deployAppName} --protocol tcp --port 8080"
+          def tidePrediction = sh(script: "cf routes | grep \"bf-tideprediction \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${deployAppName} --destination-app ${tidePrediction} --protocol tcp --port 8080"
+        } catch (Exception ex) {
+          echo "Could not establish network policies. The network policy tool should be run post-build to ensure functionality."
+        }
         
         // Remove legacy applications
         for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
