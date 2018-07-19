@@ -24,7 +24,7 @@ node {
       env."${param.name}" = (param.type == "booleanParam") ? paramValueString.toBoolean() : paramValueString
     }
     appvers = "${env.PROMOTE_VERSION}"
-    tidesUrl = "https://bf-tideprediction.${env.PROMOTE_DOMAIN}/tides"
+    tidesUrl = "http://bf-tideprediction-${env.PROMOTE_SPACE}.apps.internal/tides"
   }
 
   if(!fileExists('.cf')) {
@@ -99,15 +99,28 @@ node {
         sh "cf delete ${appName} -f -r"
         error("Error during application start. Deleting ${appName} and failing the build.")
       }
+
       // Assign Routes
       def legacyAppNames = sh(script: "cf routes | grep \"${appBaseName} \" | awk '{print \$4}'", returnStdout: true)
       sh "cf map-route ${appName} ${env.PROMOTE_DOMAIN} --hostname ${appBaseName}"
+      sh "cf map-route ${appName} apps.internal --hostname ${appBaseName}-${env.PROMOTE_SPACE}"
+
+      // Assign Policies
+      try {
+          def bfApi = sh(script: "cf routes | grep \"bf-api \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${bfApi} --destination-app ${appName} --protocol tcp --port 8080"
+          def tidePrediction = sh(script: "cf routes | grep \"bf-tideprediction \" | awk '{print \$4}'", returnStdout: true).trim()
+          sh "cf add-network-policy ${appName} --destination-app ${tidePrediction} --protocol tcp --port 8080"
+      } catch (Exception ex) {
+          echo "Could not establish network policies. The network policy tool should be run post-build to ensure functionality."
+      }
 
       // Delete old Routes
       for (Object legacyApp : legacyAppNames.trim().tokenize(',')) {
         def legacyAppName = legacyApp.toString().trim()
         if (legacyAppName != appName) {
           sh "cf unmap-route ${legacyAppName} ${env.PROMOTE_DOMAIN} --hostname ${appBaseName}"
+          sh "cf unmap-route ${legacyAppName} apps.internal --hostname ${appBaseName}-${env.PROMOTE_SPACE}"
           sh "cf delete -f ${legacyAppName} -r"
         }
       }
