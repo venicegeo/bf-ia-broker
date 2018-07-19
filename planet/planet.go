@@ -67,6 +67,11 @@ func GetScenes(options SearchOptions, context *Context) (*geojson.FeatureCollect
 		return nil, err
 	}
 	switch {
+	case (response.StatusCode == http.StatusUnauthorized) || (response.StatusCode == http.StatusForbidden):
+		message := fmt.Sprintf("Specified API key is invalid or has inadequate permissions. (%v) ", response.Status)
+		err := util.HTTPErr{Status: response.StatusCode, Message: message}
+		util.LogAlert(context, message)
+		return nil, err
 	case (response.StatusCode >= 400) && (response.StatusCode < 500):
 		message := fmt.Sprintf("Failed to discover scenes from Planet API: %v. ", response.Status)
 		err := util.HTTPErr{Status: response.StatusCode, Message: message}
@@ -115,6 +120,11 @@ func GetPlanetAssets(options MetadataOptions, context *Context) (*model.PlanetAs
 		return nil, err
 	}
 	switch {
+	case (response.StatusCode == http.StatusUnauthorized) || (response.StatusCode == http.StatusForbidden):
+		message := fmt.Sprintf("Specified API key is invalid or has inadequate permissions. (%v) ", response.Status)
+		err := util.HTTPErr{Status: response.StatusCode, Message: message}
+		util.LogAlert(context, message)
+		return nil, err
 	case (response.StatusCode >= 400) && (response.StatusCode < 500):
 		message := fmt.Sprintf("Failed to get asset information for scene %v: %v. ", options.ID, response.Status)
 		err := util.HTTPErr{Status: response.StatusCode, Message: message}
@@ -189,6 +199,11 @@ func GetPlanetItem(options MetadataOptions, context *Context) (*model.BrokerSear
 	defer response.Body.Close()
 	body, _ = ioutil.ReadAll(response.Body)
 	switch {
+	case (response.StatusCode == http.StatusUnauthorized) || (response.StatusCode == http.StatusForbidden):
+		message := fmt.Sprintf("Specified API key is invalid or has inadequate permissions. (%v) ", response.Status)
+		err := util.HTTPErr{Status: response.StatusCode, Message: message}
+		util.LogAlert(context, message)
+		return nil, err
 	case (response.StatusCode >= 400) && (response.StatusCode < 500):
 		message := fmt.Sprintf("Failed to find metadata for scene %v: %v. ", options.ID, response.Status)
 		err := util.HTTPErr{Status: response.StatusCode, Message: message}
