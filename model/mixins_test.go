@@ -108,3 +108,25 @@ func TestLandsatS3Bands_Apply(t *testing.T) {
 	assert.Equal(t, "https://s3.example.localdomain/landsat/LC8TEST123_B10.TIF", featureBands["tirs1"])
 	assert.Equal(t, "https://s3.example.localdomain/landsat/LC8TEST123_B11.TIF", featureBands["tirs2"])
 }
+
+func TestNewSentinelS3Bands_Success(t *testing.T) {
+	// Tested code
+	bands, err := NewSentinelS3Bands("https://s3.example.localdomain/sentinel", "S2A_MSIL1C_20161208T184752_N0204_R070_T11SKC_20161208T184750")
+
+	// Asserts
+	assert.Nil(t, err)
+	assert.NotNil(t, bands)
+	assert.Equal(t, "https://s3.example.localdomain/sentinel/tiles/11/S/KC/2016/12/08/0/B01.jp2", bands.Coastal.String())
+	assert.Equal(t, "https://s3.example.localdomain/sentinel/tiles/11/S/KC/2016/12/08/0/B02.jp2", bands.Blue.String())
+	assert.Equal(t, "https://s3.example.localdomain/sentinel/tiles/11/S/KC/2016/12/08/0/B03.jp2", bands.Green.String())
+	assert.Equal(t, "https://s3.example.localdomain/sentinel/tiles/11/S/KC/2016/12/08/0/B04.jp2", bands.Red.String())
+	assert.Equal(t, "https://s3.example.localdomain/sentinel/tiles/11/S/KC/2016/12/08/0/B05.jp2", bands.RedEdge1.String())
+	assert.Equal(t, "https://s3.example.localdomain/sentinel/tiles/11/S/KC/2016/12/08/0/B06.jp2", bands.RedEdge2.String())
+	assert.Equal(t, "https://s3.example.localdomain/sentinel/tiles/11/S/KC/2016/12/08/0/B07.jp2", bands.RedEdge3.String())
+	assert.Equal(t, "https://s3.example.localdomain/sentinel/tiles/11/S/KC/2016/12/08/0/B08.jp2", bands.NIR.String())
+	assert.Equal(t, "https://s3.example.localdomain/sentinel/tiles/11/S/KC/2016/12/08/0/B09.jp2", bands.WaterVapor.String())
+	assert.Equal(t, "https://s3.example.localdomain/sentinel/tiles/11/S/KC/2016/12/08/0/B10.jp2", bands.Cirrus.String())
+	assert.Equal(t, "https://s3.example.localdomain/sentinel/tiles/11/S/KC/2016/12/08/0/B11.jp2", bands.SWIR1.String())
+	assert.Equal(t, "https://s3.example.localdomain/sentinel/tiles/11/S/KC/2016/12/08/0/B12.jp2", bands.SWIR2.String())
+
+}

@@ -5,6 +5,7 @@ import (
 
 	landsat "github.com/venicegeo/bf-ia-broker/landsat_planet"
 	"github.com/venicegeo/bf-ia-broker/model"
+	"github.com/venicegeo/bf-ia-broker/util"
 	"github.com/venicegeo/geojson-go/geojson"
 )
 
@@ -31,7 +32,7 @@ func GetItemWithAssetMetadata(context *Context, options MetadataOptions) (*geojs
 	var result model.GeoJSONFeatureCreator
 
 	switch options.ItemType {
-	case "REOrthoTile", "PSOrthoTile", "Sentinel2L1C", "PSScene4Band":
+	case "REOrthoTile", "PSOrthoTile", "PSScene4Band":
 		// These are sources with activateable imagery hosted by Planet itself
 		if assetMetadata, err = GetPlanetAssets(options, context); err != nil {
 			return nil, err
@@ -57,6 +58,19 @@ func GetItemWithAssetMetadata(context *Context, options MetadataOptions) (*geojs
 			LandsatS3Bands:    *landsatBands,
 			TidesData:         tidesData,
 		}
+
+	case "Sentinel2L1C":
+		// Sentinel-2 imagery is hosted on an external S3 archive
+		sentinelBands, err := model.NewSentinelS3Bands(util.GetSentinelHost(), basicResult.ID)
+		if err != nil {
+			return nil, err
+		}
+		result = model.PlanetSentinelBrokerResult{
+			BasicBrokerResult: basicResult,
+			SentinelS3Bands:   *sentinelBands,
+			TidesData:         tidesData,
+		}
+
 	default:
 		err = errors.New("Unrecognized item type:" + options.ItemType)
 	}
