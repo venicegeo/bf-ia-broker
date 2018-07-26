@@ -119,6 +119,36 @@ func (result PlanetLandsatBrokerResult) GeoJSONFeature() (*geojson.Feature, erro
 	return feature, nil
 }
 
+// PlanetSentinelBrokerResult represents a Planet result referencing an external
+// Sentinel-2 archive, requiring no activation
+type PlanetSentinelBrokerResult struct {
+	BasicBrokerResult
+	SentinelS3Bands
+	*TidesData
+}
+
+// GeoJSONFeature implements the GeoJSONFeatureCreator interface
+func (result PlanetSentinelBrokerResult) GeoJSONFeature() (*geojson.Feature, error) {
+	feature, err := result.BasicBrokerResult.GeoJSONFeature()
+	if err != nil {
+		return nil, err
+	}
+
+	err = result.SentinelS3Bands.Apply(feature)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.TidesData != nil {
+		err = result.TidesData.Apply(feature)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return feature, nil
+}
+
 // IndexedLandsatBrokerResult represents a local-index result containing Landsat8 data
 type IndexedLandsatBrokerResult struct {
 	BasicBrokerResult
