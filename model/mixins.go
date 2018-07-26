@@ -165,8 +165,8 @@ func NewSentinelS3Bands(bucketFolderURL string, sentinelID string) (*SentinelS3B
 		mgrs3            = m[5]
 	)
 	year, _ = strconv.Atoi(m[0])
-	month, _ = strconv.Atoi(m[0])
-	day, _ = strconv.Atoi(m[0])
+	month, _ = strconv.Atoi(m[1])
+	day, _ = strconv.Atoi(m[2])
 
 	bands := SentinelS3Bands{}
 	fileNameMap := []sentinelFilenameDestination{
