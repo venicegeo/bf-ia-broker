@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/venicegeo/geojson-go/geojson"
@@ -146,7 +147,7 @@ type sentinelFilenameDestination struct {
 var sentinelIDPattern = regexp.MustCompile("S2(A|B)_MSIL1C_([0-9]{4})([0-9]{2})([0-9]{2})T[0-9]+_[A-Z0-9]+_[A-Z0-9]+_T([0-9]+)([A-Z])([A-Z]+)_[0-9]{8}T[0-9]")
 
 // Inputs: hostUrl, mgrs1, mgrs2, mgrs3, year, month, day, filename
-const sentinelAWSURLFormat = "%s/tiles/%s/%s/%s/%s/%s/%s/0/%s"
+const sentinelAWSURLFormat = "%s/tiles/%s/%s/%s/%d/%d/%d/0/%s"
 
 // NewSentinelS3Bands creates a SentinelS3Bands object based on the given sentinel ID
 func NewSentinelS3Bands(bucketFolderURL string, sentinelID string) (*SentinelS3Bands, error) {
@@ -158,13 +159,14 @@ func NewSentinelS3Bands(bucketFolderURL string, sentinelID string) (*SentinelS3B
 	m = m[2:] // Skip over whole string match and satellite A/B match
 
 	var (
-		year  = m[0]
-		month = m[1]
-		day   = m[2]
-		mgrs1 = m[3]
-		mgrs2 = m[4]
-		mgrs3 = m[5]
+		year, month, day int
+		mgrs1            = m[3]
+		mgrs2            = m[4]
+		mgrs3            = m[5]
 	)
+	year, _ = strconv.Atoi(m[0])
+	month, _ = strconv.Atoi(m[0])
+	day, _ = strconv.Atoi(m[0])
 
 	bands := SentinelS3Bands{}
 	fileNameMap := []sentinelFilenameDestination{
