@@ -29,6 +29,7 @@ func (pam PlanetAssetMetadata) Apply(feature *geojson.Feature) error {
 	feature.Properties["permissions"] = pam.Permissions
 	feature.Properties["status"] = pam.Status
 	feature.Properties["type"] = pam.Type
+	feature.Properties["srcHorizontalAccuracy"] = "<10m RMSE"
 	return nil
 }
 
@@ -118,6 +119,7 @@ func (lsb LandsatS3Bands) Apply(feature *geojson.Feature) error {
 		"tirs1":        lsb.TIRS1.String(),
 		"tirs2":        lsb.TIRS2.String(),
 	}
+	feature.Properties["srcHorizontalAccuracy"] = "12m CE90"
 	return nil
 }
 
@@ -209,5 +211,6 @@ func (ssb SentinelS3Bands) Apply(feature *geojson.Feature) error {
 		"swir1":      ssb.SWIR1.String(),
 		"swir2":      ssb.SWIR2.String(),
 	}
+	feature.Properties["srcHorizontalAccuracy"] = "12.5m with GCPs"
 	return nil
 }
