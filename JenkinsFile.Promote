@@ -81,7 +81,7 @@ node {
     sh "cf target -o ${env.PCF_ORG} -s ${env.PROMOTE_SPACE}"
 
     // Push the app
-    sh "cf push ${appName} -f manifest.jenkins.yml --hostname ${appName} -d ${env.PROMOTE_DOMAIN} --no-start --no-route"
+    sh "cf push ${appName} -f manifest.jenkins.yml --hostname ${appName} -d ${env.PROMOTE_DOMAIN} -c 'sleep 5m' --no-route --health-check-type none"
     try {
         sh "cf set-env ${appName} SPACE ${env.PROMOTE_SPACE}"
         sh "cf set-env ${appName} DOMAIN ${env.PROMOTE_DOMAIN}"
@@ -89,7 +89,15 @@ node {
         sh "cf set-env ${appName} PL_API_URL ${env.PL_API_URL}"
         sh "cf set-env ${appName} SENTINEL_HOST ${env.SENTINEL_HOST}"
         sh "cf set-env ${appName} BF_TIDE_PREDICTION_URL ${tidesUrl}"
-        sh "cf start ${appName}"
+        sh "cf set-env ${appName} LANDSAT_INDEX_SCENES_URL ${env.LANDSAT_INDEX_SCENES_URL}"
+        sh "cf set-env ${appName} LANDSAT_INGEST_FREQUENCY ${env.LANDSAT_INGEST_FREQUENCY}"
+        
+        echo "Running database migration"
+        sh "cf restage ${appName}"
+        sh "cf run-task ${appName} './bf-ia-broker.bin migrate'"
+
+        echo "Migration successful, starting app"
+        sh "cf push ${appName} -f manifest.jenkins.yml --hostname ${appName} -d ${env.PROMOTE_DOMAIN} --health-check-type http --no-route"
       } catch (Exception e) {
         try {
           sh "cf logs --recent ${appName}"
