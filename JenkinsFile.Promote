@@ -89,6 +89,8 @@ node {
         sh "cf set-env ${appName} PL_API_URL ${env.PL_API_URL}"
         sh "cf set-env ${appName} SENTINEL_HOST ${env.SENTINEL_HOST}"
         sh "cf set-env ${appName} BF_TIDE_PREDICTION_URL ${tidesUrl}"
+        sh "cf set-env ${appName} LANDSAT_INDEX_SCENES_URL ${env.LANDSAT_INDEX_SCENES_URL}"
+        sh "cf set-env ${appName} LANDSAT_INGEST_FREQUENCY ${env.LANDSAT_INGEST_FREQUENCY}"
         sh "cf start ${appName}"
       } catch (Exception e) {
         try {
