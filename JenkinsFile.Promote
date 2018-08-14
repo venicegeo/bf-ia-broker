@@ -91,7 +91,7 @@ node {
         sh "cf set-env ${appName} BF_TIDE_PREDICTION_URL ${tidesUrl}"
         sh "cf set-env ${appName} LANDSAT_INDEX_SCENES_URL ${env.LANDSAT_INDEX_SCENES_URL}"
         sh "cf set-env ${appName} LANDSAT_INGEST_FREQUENCY ${env.LANDSAT_INGEST_FREQUENCY}"
-        
+
         echo "Running database migration"
         sh "cf restage ${appName}"
         sh "cf run-task ${appName} './bf-ia-broker.bin migrate'"
