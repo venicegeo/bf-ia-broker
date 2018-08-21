@@ -45,6 +45,7 @@ func GetSceneByID(tx *sql.Tx, productID string) (*LandsatLocalIndexScene, error)
 }
 
 // SearchScenes does a lookup in indexed scenes based on a bounding box, cloud cover, and time window
+// Note: Any cloud cover that is <0 is usually corrupt in some way, and shall be excluded
 func SearchScenes(tx *sql.Tx, bbox geojson.BoundingBox, maxCloudCover float64, minAcquiredDate time.Time, maxAcquiredDate time.Time) ([]LandsatLocalIndexScene, error) {
 	rows, err := tx.Query(`
 		SELECT product_id, acquisition_date, cloud_cover, scene_url, ST_AsGeoJSON(bounds), 
