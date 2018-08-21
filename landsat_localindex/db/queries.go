@@ -50,7 +50,8 @@ func SearchScenes(tx *sql.Tx, bbox geojson.BoundingBox, maxCloudCover float64, m
 		SELECT product_id, acquisition_date, cloud_cover, scene_url, ST_AsGeoJSON(bounds), 
 		       ST_AsGeoJSON(ST_MakePolygon(ST_MakeLine(ARRAY[corner_ul, corner_ur, corner_lr, corner_ll, corner_ul])))
 		FROM public.scenes
-		WHERE cloud_cover < $1
+		WHERE cloud_cover != -1
+			AND cloud_cover < $1
 			AND acquisition_date > $2
 			AND acquisition_date < $3
 			AND corner_ll IS NOT NULL 
