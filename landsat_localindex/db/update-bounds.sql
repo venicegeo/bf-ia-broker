@@ -1,4 +1,6 @@
 --Updates scenes.bounds to the new format that does not use WRS2.
+--This should be run once on databases that contain entries where scenes.bounds was populated from the wrs2 table.
+--To rebuild the spatial index, run 'VACUUM ANALYZE scenes'.
 
  UPDATE scenes set bounds = q1.safePoly FROM 
 (
@@ -19,5 +21,6 @@ st_makepolygon(st_makeline(array[st_wrapx(corner_ul, 0, -360), st_wrapx(corner_u
 ) 
 else bounds end
 )  as safePoly
-from scenes) as q1 
+from scenes 
+WHERE corner_ll IS NOT NULL) as q1 
 WHERE product_id = q1.pid
