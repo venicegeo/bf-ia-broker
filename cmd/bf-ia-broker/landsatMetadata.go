@@ -19,10 +19,33 @@ corner_lr IS NULL
 
 const insertSQL = `
 UPDATE scenes SET 
-	corner_ul = st_setSRID( st_MakePoint($2, $3), 4326), 
-	corner_ur = st_setSRID( st_MakePoint($4, $5), 4326),
+	corner_ul = st_setSRID(st_MakePoint($2, $3), 4326), 
+	corner_ur = st_setSRID(st_MakePoint($4, $5), 4326),
 	corner_lr = st_setSRID(st_MakePoint($6, $7), 4326),
-	corner_ll = st_setSRID( st_MakePoint($8, $9), 4326)
+	corner_ll = st_setSRID(st_MakePoint($8, $9), 4326),
+	bounds = case when (
+		--Any edge is longer than 90deg? Probably crosses the antimeridian.
+		(abs($2-$4) > 90) OR (abs($2-$6)>90) OR (abs($2-$8)>90)) THEN 
+	st_union(
+	st_intersection(
+	st_makeenvelope(-180, -90, 180, 90, 4326),
+	st_makepolygon(st_makeline(array[
+		st_wrapx(st_setSRID(st_MakePoint($2, $3), 4326), 0, 360), 
+		st_wrapx(st_setSRID(st_MakePoint($4, $5), 4326), 0, 360), 
+		st_wrapx(st_setSRID(st_MakePoint($6, $7), 4326), 0, 360), 
+		st_wrapx(st_setSRID(st_MakePoint($8, $9), 4326), 0, 360), 
+		st_wrapx(st_setSRID(st_MakePoint($2, $3), 4326), 0, 360)]))
+	),
+	st_intersection(
+	st_makeenvelope(-180, -90, 180, 90, 4326),
+	st_makepolygon(st_makeline(array[
+		st_wrapx(st_setSRID(st_MakePoint($2, $3), 4326), 0, -360), 
+		st_wrapx(st_setSRID(st_MakePoint($4, $5), 4326), 0, -360), 
+		st_wrapx(st_setSRID(st_MakePoint($6, $7), 4326), 0, -360), 
+		st_wrapx(st_setSRID(st_MakePoint($8, $9), 4326), 0, -360), 
+		st_wrapx(st_setSRID(st_MakePoint($2, $3), 4326), 0, -360)]))
+	))
+	else bounds end
 WHERE product_id = $1
 `
 
