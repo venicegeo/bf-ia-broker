@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/venicegeo/geojson-go/geojson"
@@ -69,17 +70,25 @@ func SearchScenes(tx *sql.Tx, bbox geojson.BoundingBox, maxCloudCover float64, m
 
 	results := []LandsatLocalIndexScene{}
 	for rows.Next() {
-		var wrsBoundsBytes []byte
-		var mtlBoundsBytes []byte
+		var (
+			mtlBoundsBytes     []byte
+			wrsBoundsBytes     []byte
+			polyErr1, polyErr2 error
+			mtlBounds          SingleOrMultiPolygon
+		)
+
 		scene := LandsatLocalIndexScene{}
 		if err = rows.Scan(&scene.ProductID, &scene.AcquisitionDate, &scene.CloudCover, &scene.SceneURLString, &wrsBoundsBytes, &mtlBoundsBytes); err != nil {
 			return nil, err
 		}
 
-		mtlBounds, err := geojson.PolygonFromBytes(mtlBoundsBytes)
-		if err != nil {
-			return nil, err
+		if mtlBounds, polyErr1 = geojson.PolygonFromBytes(mtlBoundsBytes); polyErr1 != nil {
+			mtlBounds, polyErr2 = geojson.MultiPolygonFromBytes(mtlBoundsBytes)
 		}
+		if polyErr2 != nil {
+			return nil, fmt.Errorf("Could not extract either Polygon or MultiPolygon from MTL bounds bytes: %v; %v", polyErr1, polyErr2)
+		}
+
 		scene.Bounds = mtlBounds
 		scene.BoundingBox = mtlBounds.ForceBbox()
 
