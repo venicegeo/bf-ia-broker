@@ -10,13 +10,15 @@ import (
 
 // GetSceneByID looks up a single scene by its product ID
 func GetSceneByID(tx *sql.Tx, productID string) (*LandsatLocalIndexScene, error) {
-	var wrsBoundsBytes []byte
-	var mtlBoundsBytes []byte
+	var (
+		mtlBoundsBytes     []byte
+		mtlBounds          SingleOrMultiPolygon
+		polyErr1, polyErr2 error
+	)
 	scene := LandsatLocalIndexScene{}
 
 	rows, err := tx.Query(`
-		SELECT product_id, acquisition_date, cloud_cover, scene_url, ST_AsGeoJSON(bounds), 
-		       ST_AsGeoJSON(ST_MakePolygon(ST_MakeLine(ARRAY[corner_ul, corner_ur, corner_lr, corner_ll, corner_ul])))
+		SELECT product_id, acquisition_date, cloud_cover, scene_url, ST_AsGeoJSON(bounds)
 		FROM public.scenes
 		WHERE product_id=$1
 			AND corner_ll IS NOT NULL 
@@ -30,15 +32,18 @@ func GetSceneByID(tx *sql.Tx, productID string) (*LandsatLocalIndexScene, error)
 		return nil, sql.ErrNoRows
 	}
 
-	err = rows.Scan(&scene.ProductID, &scene.AcquisitionDate, &scene.CloudCover, &scene.SceneURLString, &wrsBoundsBytes, &mtlBoundsBytes)
+	err = rows.Scan(&scene.ProductID, &scene.AcquisitionDate, &scene.CloudCover, &scene.SceneURLString, &mtlBoundsBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	mtlBounds, err := geojson.PolygonFromBytes(mtlBoundsBytes)
-	if err != nil {
-		return nil, err
+	if mtlBounds, polyErr1 = geojson.PolygonFromBytes(mtlBoundsBytes); polyErr1 != nil {
+		mtlBounds, polyErr2 = geojson.MultiPolygonFromBytes(mtlBoundsBytes)
 	}
+	if polyErr2 != nil {
+		return nil, fmt.Errorf("Could not extract either Polygon or MultiPolygon from MTL bounds bytes: %v; %v", polyErr1, polyErr2)
+	}
+
 	scene.Bounds = mtlBounds
 	scene.BoundingBox = mtlBounds.ForceBbox()
 
@@ -49,8 +54,7 @@ func GetSceneByID(tx *sql.Tx, productID string) (*LandsatLocalIndexScene, error)
 // Note: Any cloud cover that is <0 is usually corrupt in some way, and shall be excluded
 func SearchScenes(tx *sql.Tx, bbox geojson.BoundingBox, maxCloudCover float64, minAcquiredDate time.Time, maxAcquiredDate time.Time) ([]LandsatLocalIndexScene, error) {
 	rows, err := tx.Query(`
-		SELECT product_id, acquisition_date, cloud_cover, scene_url, ST_AsGeoJSON(bounds), 
-		       ST_AsGeoJSON(bounds)
+		SELECT product_id, acquisition_date, cloud_cover, scene_url, ST_AsGeoJSON(bounds)
 		FROM public.scenes
 		WHERE cloud_cover >= 0
 			AND cloud_cover < $1
@@ -72,13 +76,12 @@ func SearchScenes(tx *sql.Tx, bbox geojson.BoundingBox, maxCloudCover float64, m
 	for rows.Next() {
 		var (
 			mtlBoundsBytes     []byte
-			wrsBoundsBytes     []byte
 			polyErr1, polyErr2 error
 			mtlBounds          SingleOrMultiPolygon
 		)
 
 		scene := LandsatLocalIndexScene{}
-		if err = rows.Scan(&scene.ProductID, &scene.AcquisitionDate, &scene.CloudCover, &scene.SceneURLString, &wrsBoundsBytes, &mtlBoundsBytes); err != nil {
+		if err = rows.Scan(&scene.ProductID, &scene.AcquisitionDate, &scene.CloudCover, &scene.SceneURLString, &mtlBoundsBytes); err != nil {
 			return nil, err
 		}
 
