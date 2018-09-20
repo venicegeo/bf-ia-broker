@@ -433,9 +433,11 @@ func transformSRFeature(feature *geojson.Feature, context util.LogContext) *geoj
 	properties["acquiredDate"] = adString
 	properties["fileFormat"] = "geotiff"
 	properties["sensorName"], _ = feature.Properties["satellite_id"].(string)
+	properties["srcHorizontalAccuracy"] = "<10m RMSE"
 
 	if landsat.IsValidLandSatID(id) {
 		dataType, _ := feature.Properties["data_type"].(string)
+		properties["srcHorizontalAccuracy"] = "12m CE90"
 		err := addLandsatS3BandsToProperties(id, dataType, &properties)
 		if err != nil {
 			util.LogAlert(context, err.Error()+" :: in LandSat feature: "+feature.String())
@@ -444,6 +446,7 @@ func transformSRFeature(feature *geojson.Feature, context util.LogContext) *geoj
 
 	if isSentinelFeature(id) {
 		properties["fileFormat"] = "jpeg2000"
+		properties["srcHorizontalAccuracy"] = "12.5m with GCPs"
 		err := addSentinelS3BandsToProperties(id, &properties)
 		if err != nil {
 			util.LogAlert(context, err.Error()+" :: in Sentinel-2 feature: "+feature.String())
