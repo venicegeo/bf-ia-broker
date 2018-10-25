@@ -89,7 +89,7 @@ doneReading:
 
 	sceneMap = newSceneMap
 	SceneMapIsReady = true
-	util.LogAudit(ctx, util.LogAuditInput{Actor: "anon user", Action: "GET", Actee: sceneListURL, Message: fmt.Sprintf("Imported scene list; duration: %fs", time.Now().Sub(start).Seconds(), Severity: util.INFO})
+	util.LogAudit(ctx, util.LogAuditInput{Actor: "anon user", Action: "GET", Actee: sceneListURL, Message: fmt.Sprintf("Imported scene list; duration: %fs", time.Now().Sub(start).Seconds()), Severity: util.INFO})
 	return nil
 }
 
