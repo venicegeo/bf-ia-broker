@@ -40,7 +40,7 @@ var SceneMapIsReady = false
 func UpdateSceneMap(ctx util.LogContext) (err error) {
 	landSatHost := util.GetLandsatHost()
 	sceneListURL := fmt.Sprintf("%s/c1/L8/scene_list.gz", landSatHost)
-	start = time.Now()
+	start := time.Now()
 
 	util.LogAudit(ctx, util.LogAuditInput{Actor: "anon user", Action: "GET", Actee: sceneListURL, Message: "Importing scene list", Severity: util.INFO})
 	c := util.HTTPClient()
