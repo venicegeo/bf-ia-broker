@@ -40,6 +40,7 @@ var SceneMapIsReady = false
 func UpdateSceneMap(ctx util.LogContext) (err error) {
 	landSatHost := util.GetLandsatHost()
 	sceneListURL := fmt.Sprintf("%s/c1/L8/scene_list.gz", landSatHost)
+	start = time.Now()
 
 	util.LogAudit(ctx, util.LogAuditInput{Actor: "anon user", Action: "GET", Actee: sceneListURL, Message: "Importing scene list", Severity: util.INFO})
 	c := util.HTTPClient()
@@ -58,6 +59,7 @@ func UpdateSceneMap(ctx util.LogContext) (err error) {
 	if err != nil {
 		return
 	}
+	defer gzipReader.Close()
 
 	csvReader := csv.NewReader(gzipReader)
 	newSceneMap := map[string]sceneMapRecord{}
@@ -87,7 +89,7 @@ doneReading:
 
 	sceneMap = newSceneMap
 	SceneMapIsReady = true
-	util.LogAudit(ctx, util.LogAuditInput{Actor: "anon user", Action: "GET", Actee: sceneListURL, Message: "Imported scene list", Severity: util.INFO})
+	util.LogAudit(ctx, util.LogAuditInput{Actor: "anon user", Action: "GET", Actee: sceneListURL, Message: fmt.Sprintf("Imported scene list; duration: %fs", time.Now().Sub(start).Seconds(), Severity: util.INFO})
 	return nil
 }
 
