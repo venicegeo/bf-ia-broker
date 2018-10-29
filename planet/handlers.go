@@ -106,7 +106,7 @@ func (h DiscoverHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		itemType = "PSOrthoTile"
 	case "Landsat8L1G", "landsat":
 		itemType = "Landsat8L1G"
-	case "Sentinel2L1C", "sentinel":
+	case "Sentinel2L1C", "sentinel-s3", "sentinel-planet":
 		itemType = "Sentinel2L1C"
 	case "PSScene4Band":
 		// No op
@@ -222,12 +222,19 @@ func (h MetadataHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 	switch itemType {
 	case "REOrthoTile", "rapideye":
 		options.ItemType = "REOrthoTile"
+		options.ImagerySource = rapidEye
 	case "PSOrthoTile", "planetscope":
 		options.ItemType = "PSOrthoTile"
+		options.ImagerySource = planetScope
 	case "Landsat8L1G", "landsat":
 		options.ItemType = "Landsat8L1G"
-	case "Sentinel2L1C", "sentinel":
+		options.ImagerySource = landsatFromS3
+	case "Sentinel2L1C", "sentinel-planet":
 		options.ItemType = "Sentinel2L1C"
+		options.ImagerySource = sentinelFromPlanet
+	case "sentinel-s3":
+		options.ItemType = "Sentinel2L1C"
+		options.ImagerySource = sentinelFromS3
 	case "PSScene4Band":
 		// No op
 	default:
@@ -320,14 +327,20 @@ func (h ActivateHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 	switch itemType {
 	case "REOrthoTile", "rapideye":
 		options.ItemType = "REOrthoTile"
+		options.ImagerySource = rapidEye
 	case "PSOrthoTile", "planetscope":
 		options.ItemType = "PSOrthoTile"
-	// case "Sentinel2L1C", "sentinel":			// Sentinel does not need activation
-	// 	 options.ItemType = "Sentinel2L1C"
+		options.ImagerySource = planetScope
+	case "Sentinel2L1C", "sentinel-planet":
+		options.ItemType = "Sentinel2L1C"
+		options.ImagerySource = sentinelFromPlanet
 	case "PSScene4Band":
 		// No op
-	// case "landsat":		                  // LandSat does not need activation
-	// 	 options.ItemType = "Landsat8L1G"
+	case "sentinel-s3", "landsat":
+		message := fmt.Sprintf("The item type `%v` does not require activation", itemType)
+		util.LogSimpleErr(&h.Context, message, nil)
+		util.HTTPError(request, writer, &h.Context, message, http.StatusBadRequest)
+		return
 	default:
 		message := fmt.Sprintf("The item type value of %v is invalid", itemType)
 		util.LogSimpleErr(&h.Context, message, nil)
