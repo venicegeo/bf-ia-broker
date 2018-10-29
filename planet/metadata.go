@@ -1,7 +1,7 @@
 package planet
 
 import (
-	"errors"
+	"fmt"
 
 	landsat "github.com/venicegeo/bf-ia-broker/landsat_planet"
 	"github.com/venicegeo/bf-ia-broker/model"
@@ -21,18 +21,19 @@ func GetItemWithAssetMetadata(context *Context, options MetadataOptions) (*geojs
 
 	basicResult := searchResult.BasicBrokerResult
 	tidesData := searchResult.TidesData
-	if options.ItemType == "Sentinel2L1C" {
-		// Sentinel-2 uses JPEG2000 imagery
+	if options.ImagerySource == sentinelFromS3 {
+		// Sentinel-2 in S3 uses JPEG2000 imagery
 		basicResult.FileFormat = model.JPEG2000
 	}
+	// TODO: check if Sentinel-2 in Planet returns as GeoTIFF or JPEG2000
 	if err != nil {
 		return nil, err
 	}
 
 	var result model.GeoJSONFeatureCreator
 
-	switch options.ItemType {
-	case "REOrthoTile", "PSOrthoTile", "PSScene4Band":
+	switch options.ImagerySource {
+	case rapidEye, planetScope, sentinelFromPlanet:
 		// These are sources with activateable imagery hosted by Planet itself
 		if assetMetadata, err = GetPlanetAssets(options, context); err != nil {
 			return nil, err
@@ -43,7 +44,7 @@ func GetItemWithAssetMetadata(context *Context, options MetadataOptions) (*geojs
 			TidesData:           tidesData,
 		}
 
-	case "Landsat8L1G":
+	case landsatFromS3:
 		// Landsat imagery is hosted on an external S3 archive
 		folderURL, prefix, err := landsat.GetSceneFolderURL(basicResult.ID, basicResult.DataType)
 		if err != nil {
@@ -59,7 +60,7 @@ func GetItemWithAssetMetadata(context *Context, options MetadataOptions) (*geojs
 			TidesData:         tidesData,
 		}
 
-	case "Sentinel2L1C":
+	case sentinelFromS3:
 		// Sentinel-2 imagery is hosted on an external S3 archive
 		sentinelBands, err := model.NewSentinelS3Bands(util.GetSentinelHost(), basicResult.ID)
 		if err != nil {
@@ -72,7 +73,7 @@ func GetItemWithAssetMetadata(context *Context, options MetadataOptions) (*geojs
 		}
 
 	default:
-		err = errors.New("Unrecognized item type:" + options.ItemType)
+		return nil, fmt.Errorf("Unrecognized imagery source (%v), type: %s", options.ImagerySource, options.ItemType)
 	}
 	return result.GeoJSONFeature()
 }

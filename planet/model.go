@@ -1,6 +1,8 @@
 package planet
 
 import (
+	"log"
+
 	"github.com/venicegeo/bf-ia-broker/util"
 	"github.com/venicegeo/geojson-go/geojson"
 )
@@ -124,7 +126,33 @@ type planetRequestInput struct {
 
 // MetadataOptions are the options for the Asset func
 type MetadataOptions struct {
-	ID       string
-	Tides    bool
-	ItemType string
+	ID            string
+	Tides         bool
+	ItemType      string
+	ImagerySource ImagerySource
+}
+
+// ImagerySource is an enum of all possible Planet imagery sources
+type ImagerySource uint64
+
+const (
+	_ ImagerySource = iota
+	rapidEye
+	planetScope
+	// landsatFromPlanet // Not supported
+	landsatFromS3
+	sentinelFromPlanet
+	sentinelFromS3
+)
+
+func imagerySourceRequiresActivation(imagerySource ImagerySource) bool {
+	switch imagerySource {
+	case rapidEye, planetScope, sentinelFromPlanet:
+		return true
+	case landsatFromS3, sentinelFromS3:
+		return false
+	default:
+		log.Print("Unrecognized imagery source, assuming activation needed")
+		return true
+	}
 }

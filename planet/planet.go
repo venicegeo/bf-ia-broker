@@ -156,7 +156,7 @@ func GetPlanetAssets(options MetadataOptions, context *Context) (*model.PlanetAs
 	log.Print(assetMetadata)
 	log.Print(err)
 
-	if err == nil && itemTypeRequiresActivation(options.ItemType) {
+	if err == nil && imagerySourceRequiresActivation(options.ImagerySource) {
 		if assetMetadata == nil {
 			err = errors.New("Found no asset data in response for item type requiring asset activation")
 		} else if assetMetadata.ActivationURL.String() == "" {
@@ -295,15 +295,4 @@ func planetRequest(input planetRequestInput, context *Context) (*http.Response, 
 	util.LogAudit(context, util.LogAuditInput{Actor: "planet/doRequest", Action: input.method, Actee: inputURL, Message: message, Severity: util.INFO})
 	util.LogAudit(context, util.LogAuditInput{Actor: inputURL, Action: input.method + " response", Actee: "planet/doRequest", Message: "Receiving data from Planet API", Severity: util.INFO})
 	return util.HTTPClient().Do(request)
-}
-
-func itemTypeRequiresActivation(itemType string) bool {
-	switch itemType {
-	case "REOrthoTile":
-		fallthrough
-	case "PSOrthoTile":
-		return true
-	default:
-		return false
-	}
 }
