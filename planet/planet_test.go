@@ -113,7 +113,7 @@ func TestGetMetadata(t *testing.T) {
 	scenes, err := GetScenes(options, &context)
 	assert.Nil(t, err, "Expected request to succeed; received: %v", err)
 
-	aOptions := MetadataOptions{ID: scenes.Features[0].IDStr(), Tides: true, ItemType: "REOrthoTile"}
+	aOptions := MetadataOptions{ID: scenes.Features[0].IDStr(), Tides: true, ItemType: "REOrthoTile", ImagerySource: rapidEye}
 	result, err := GetPlanetItem(aOptions, &context)
 	assert.Nil(t, err, "Failed to get asset metadata; received: %v", err)
 
@@ -129,7 +129,7 @@ func TestGetAsset(t *testing.T) {
 	scenes, err := GetScenes(options, &context)
 	assert.Nil(t, err, "Expected request to succeed; received: %v", err)
 
-	aOptions := MetadataOptions{ID: scenes.Features[0].IDStr(), Tides: true, ItemType: "REOrthoTile"}
+	aOptions := MetadataOptions{ID: scenes.Features[0].IDStr(), Tides: true, ItemType: "REOrthoTile", ImagerySource: rapidEye}
 	_, err = GetPlanetAssets(aOptions, &context)
 	assert.Nil(t, err, "Failed to get asset; received %v", err)
 }
@@ -137,7 +137,7 @@ func TestGetAsset(t *testing.T) {
 func TestGetMetadataBadAssetID(t *testing.T) {
 	planetServer, tidesServer, _ := createTestFixtures()
 	context := makeTestingContext(planetServer, tidesServer)
-	aOptions := MetadataOptions{ID: "X-BAD-ID-X", Tides: true, ItemType: "PSOrthoTile"}
+	aOptions := MetadataOptions{ID: "X-BAD-ID-X", Tides: true, ItemType: "PSOrthoTile", ImagerySource: planetScope}
 
 	_, err := GetPlanetItem(aOptions, &context)
 	assert.NotNil(t, err, "Expected invalid ID asset to fail, but it succeeded.")
@@ -149,7 +149,7 @@ func TestGetMetadataBadAssetID(t *testing.T) {
 func TestGetMetadataBadMetadata(t *testing.T) {
 	planetServer, tidesServer, _ := createTestFixtures()
 	context := makeTestingContext(planetServer, tidesServer)
-	aOptions := MetadataOptions{ID: testingValidItemIDWithBadMetadata, Tides: true, ItemType: "REOrthoTile"}
+	aOptions := MetadataOptions{ID: testingValidItemIDWithBadMetadata, Tides: true, ItemType: "REOrthoTile", ImagerySource: rapidEye}
 
 	_, err := GetPlanetItem(aOptions, &context)
 	assert.NotNil(t, err, "Expected asset with bad metadata to fail, but it succeeded.")
@@ -168,7 +168,7 @@ func TestGetAssetNoDataFromPlanet(t *testing.T) {
 	var err error
 
 	// Should 502 for RapidEye missing asset data
-	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "REOrthoTile"}
+	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "REOrthoTile", ImagerySource: rapidEye}
 	_, err = GetPlanetAssets(aOptions, &context)
 	if httpErr, ok := err.(util.HTTPErr); err != nil && !ok {
 		t.Errorf("Expected an HTTPErr, got a %T", err)
@@ -177,7 +177,16 @@ func TestGetAssetNoDataFromPlanet(t *testing.T) {
 	}
 
 	// Should 502 for PlanetScope missing asset data
-	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "PSOrthoTile"}
+	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "PSOrthoTile", ImagerySource: planetScope}
+	_, err = GetPlanetAssets(aOptions, &context)
+	if httpErr, ok := err.(util.HTTPErr); err != nil && !ok {
+		t.Errorf("Expected an HTTPErr, got a %T", err)
+	} else {
+		assert.Equal(t, http.StatusBadGateway, httpErr.Status, "Expected error 502 but got: %v", httpErr)
+	}
+
+	// Should 502 for Sentinel-2 with Planet imagery missing asset data
+	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "Sentinel2L1C", ImagerySource: sentinelFromPlanet}
 	_, err = GetPlanetAssets(aOptions, &context)
 	if httpErr, ok := err.(util.HTTPErr); err != nil && !ok {
 		t.Errorf("Expected an HTTPErr, got a %T", err)
@@ -186,12 +195,12 @@ func TestGetAssetNoDataFromPlanet(t *testing.T) {
 	}
 
 	// Should NOT error for Landsat missing asset data (it's supposed to not have it)
-	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "Landsat8L1G"}
+	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "Landsat8L1G", ImagerySource: landsatFromS3}
 	_, err = GetPlanetAssets(aOptions, &context)
 	assert.Nil(t, err, "Expected request to succeed; received: %v", err)
 
-	// Should NOT error for Sentinel missing asset data (it's supposed to not have it)
-	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "Sentinel2L1C"}
+	// Should NOT error for Sentinel with S3 imagery missing asset data (it's supposed to not have it)
+	aOptions = MetadataOptions{ID: testingValidSceneIDWithNoMetadata, Tides: true, ItemType: "Sentinel2L1C", ImagerySource: sentinelFromS3}
 	_, err = GetPlanetAssets(aOptions, &context)
 	assert.Nil(t, err, "Expected request to succeed; received: %v", err)
 }
@@ -200,7 +209,7 @@ func TestGetMetadataBadKey(t *testing.T) {
 	planetServer, tidesServer, _ := createTestFixtures()
 	context := makeTestingContext(planetServer, tidesServer)
 	context.PlanetKey = "garbage"
-	aOptions := MetadataOptions{ID: "foobar123", Tides: true, ItemType: "PSOrthoTile"}
+	aOptions := MetadataOptions{ID: "foobar123", Tides: true, ItemType: "PSOrthoTile", ImagerySource: planetScope}
 	_, err := GetPlanetItem(aOptions, &context)
 	assert.NotNil(t, err, "Expected invalid API key to fail, but it succeeded.")
 	if httpErr, ok := err.(util.HTTPErr); err != nil && !ok {
@@ -210,13 +219,14 @@ func TestGetMetadataBadKey(t *testing.T) {
 	}
 }
 
-func TestGetMetadataSentinel(t *testing.T) {
+func TestGetMetadataSentinelFromS3(t *testing.T) {
 	planetServer, tidesServer, _ := createTestFixtures()
 	context := makeTestingContext(planetServer, tidesServer)
 
 	options := MetadataOptions{
-		ID:       "S2A_MSIL1C_20160513T183921_N0204_R070_T11SKD_20160513T185132",
-		ItemType: "Sentinel2L1C",
+		ID:            "S2A_MSIL1C_20160513T183921_N0204_R070_T11SKD_20160513T185132",
+		ItemType:      "Sentinel2L1C",
+		ImagerySource: sentinelFromS3,
 	}
 
 	_, err := GetPlanetItem(options, &context)
