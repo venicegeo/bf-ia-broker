@@ -106,7 +106,7 @@ func (h DiscoverHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		itemType = "PSOrthoTile"
 	case "Landsat8L1G", "landsat":
 		itemType = "Landsat8L1G"
-	case "Sentinel2L1C", "sentinel-s3", "sentinel-planet":
+	case "Sentinel2L1C", "sentinel_s3", "sentinel_planet":
 		itemType = "Sentinel2L1C"
 	case "PSScene4Band":
 		// No op
@@ -229,10 +229,10 @@ func (h MetadataHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 	case "Landsat8L1G", "landsat":
 		options.ItemType = "Landsat8L1G"
 		options.ImagerySource = landsatFromS3
-	case "Sentinel2L1C", "sentinel-planet":
+	case "Sentinel2L1C", "sentinel_planet":
 		options.ItemType = "Sentinel2L1C"
 		options.ImagerySource = sentinelFromPlanet
-	case "sentinel-s3":
+	case "sentinel_s3":
 		options.ItemType = "Sentinel2L1C"
 		options.ImagerySource = sentinelFromS3
 	case "PSScene4Band":
@@ -331,12 +331,12 @@ func (h ActivateHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 	case "PSOrthoTile", "planetscope":
 		options.ItemType = "PSOrthoTile"
 		options.ImagerySource = planetScope
-	case "Sentinel2L1C", "sentinel-planet":
+	case "Sentinel2L1C", "sentinel_planet":
 		options.ItemType = "Sentinel2L1C"
 		options.ImagerySource = sentinelFromPlanet
 	case "PSScene4Band":
 		// No op
-	case "sentinel-s3", "landsat":
+	case "sentinel_s3", "landsat":
 		message := fmt.Sprintf("The item type `%v` does not require activation", itemType)
 		util.LogSimpleErr(&h.Context, message, nil)
 		util.HTTPError(request, writer, &h.Context, message, http.StatusBadRequest)
