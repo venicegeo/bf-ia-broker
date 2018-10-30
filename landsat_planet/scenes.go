@@ -22,7 +22,7 @@ import (
 	"io"
 	"strings"
 	"time"
-	"runtime"
+	
 	"github.com/venicegeo/bf-ia-broker/util"
 )
 
