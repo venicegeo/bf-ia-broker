@@ -62,7 +62,6 @@ func UpdateSceneMap(ctx util.LogContext) (err error) {
 	defer gzipReader.Close()
 
 	csvReader := csv.NewReader(gzipReader)
-	csvReader.ReuseRecord = true
 
 doneReading:
 	for {
