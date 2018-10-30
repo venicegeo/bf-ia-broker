@@ -63,7 +63,6 @@ func UpdateSceneMap(ctx util.LogContext) (err error) {
 
 	csvReader := csv.NewReader(gzipReader)
 
-	newSceneMap := map[string]sceneMapRecord{}
 doneReading:
 	for {
 		record, readErr := csvReader.Read()
@@ -73,13 +72,15 @@ doneReading:
 			filePrefix := record[0]
 			// Second column contains scene ID
 			id := record[1]
-			// Last column contains URL
-			url := record[len(record)-1]
-			// Strip the "index.html" file name to just get the directory path
-			lastSlash := strings.LastIndex(url, "/")
-			url = url[:lastSlash+1]
-
-			newSceneMap[id] = sceneMapRecord{filePrefix: filePrefix, awsFolderURL: url}
+			// Only update if the ID does not exist in the map already
+			if _, contains := sceneMap[id]; !contains {
+				// Last column contains URL
+				url := record[len(record)-1]
+				// Strip the "index.html" file name to just get the directory path
+				lastSlash := strings.LastIndex(url, "/")
+				url = url[:lastSlash+1]
+				sceneMap[id] = sceneMapRecord{filePrefix: filePrefix, awsFolderURL: url}
+			}
 		case io.EOF:
 			break doneReading
 		default:
@@ -88,7 +89,6 @@ doneReading:
 		}
 	}
 
-	sceneMap = newSceneMap
 	SceneMapIsReady = true
 	util.LogAudit(ctx, util.LogAuditInput{Actor: "anon user", Action: "GET", Actee: sceneListURL, Message: fmt.Sprintf("Imported scene list; duration: %fs", time.Now().Sub(start).Seconds()), Severity: util.INFO})
 	return nil

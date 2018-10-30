@@ -39,9 +39,7 @@ func getPortStr() string {
 func createRouter(ctx util.LogContext) (*mux.Router, error) {
 	router := mux.NewRouter()
 	router.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
-		util.LogAudit(ctx, util.LogAuditInput{Actor: "anon user", Action: request.Method, Actee: request.URL.String(), Message: "Receiving / request", Severity: util.INFO})
-		writer.Write([]byte("Hi"))
-		util.LogAudit(ctx, util.LogAuditInput{Actor: request.URL.String(), Action: request.Method + " response", Actee: "anon user", Message: "Sending / response", Severity: util.INFO})
+		writer.Write([]byte("OK"))
 	})
 	router.Handle("/planet/discover/{itemType}", planet.NewDiscoverHandler())
 	router.Handle("/planet/{itemType}/{id}", planet.NewMetadataHandler())
