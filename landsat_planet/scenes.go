@@ -129,7 +129,7 @@ func UpdateSceneMapAsync(ctx util.LogContext, timeout time.Duration) (done chan 
 
 // UpdateSceneMapOnTicker updates the scene map on a loop with a delay of
 // a given duration. It logs any errors using the given LogContext
-func UpdateSceneMapOnTicker(d time.Duration, timeout time.Duration, ctx util.LogContext) {
+func UpdateSceneMapOnTicker(ctx util.LogContext, d time.Duration, timeout time.Duration) {
 	ticker := time.NewTicker(d)
 	for {
 		done, errored := UpdateSceneMapAsync(ctx, timeout)

@@ -162,7 +162,7 @@ func TestUpdateSceneMapAsync_Timeout(t *testing.T) {
 }
 
 func TestUpdateSceneMapOnTicker(t *testing.T) {
-	go UpdateSceneMapOnTicker(500*time.Millisecond, 10*time.Second, mockLogContext{})
+	go UpdateSceneMapOnTicker(mockLogContext{}, 500*time.Millisecond, 10*time.Second)
 
 	<-time.After(100 * time.Millisecond)
 	assert.True(t, SceneMapIsReady, "Scene map not ready immediately after scene map ticker update")
