@@ -22,7 +22,7 @@ import (
 	"io"
 	"strings"
 	"time"
-	
+
 	"github.com/venicegeo/bf-ia-broker/util"
 )
 
@@ -35,6 +35,9 @@ var sceneMap = map[string]sceneMapRecord{}
 
 // SceneMapIsReady contains a flag of whether the scene map has been loaded yet
 var SceneMapIsReady = false
+
+// ErrUpdateSceneMapTimedOut is a standard error for indicating the scene map update process timed out
+var ErrUpdateSceneMapTimedOut = errors.New("`UpdateSceneMap` process timed out")
 
 // UpdateSceneMap updates the global scene map from a remote source
 func UpdateSceneMap(ctx util.LogContext) (err error) {
@@ -96,11 +99,23 @@ doneReading:
 
 // UpdateSceneMapAsync runs UpdateSceneMap asynchronously, returning
 // completion signals via channels
-func UpdateSceneMapAsync(ctx util.LogContext) (done chan bool, errored chan error) {
+func UpdateSceneMapAsync(ctx util.LogContext, timeout time.Duration) (done chan bool, errored chan error) {
 	done = make(chan bool)
 	errored = make(chan error)
 	go func() {
-		err := UpdateSceneMap(ctx)
+		var err error
+		errChan := make(chan error)
+
+		go func() {
+			errChan <- UpdateSceneMap(ctx)
+		}()
+
+		select {
+		case err = <-errChan:
+		case <-time.After(timeout):
+			err = ErrUpdateSceneMapTimedOut
+		}
+
 		if err == nil {
 			done <- true
 		} else {
@@ -114,10 +129,10 @@ func UpdateSceneMapAsync(ctx util.LogContext) (done chan bool, errored chan erro
 
 // UpdateSceneMapOnTicker updates the scene map on a loop with a delay of
 // a given duration. It logs any errors using the given LogContext
-func UpdateSceneMapOnTicker(d time.Duration, ctx util.LogContext) {
+func UpdateSceneMapOnTicker(ctx util.LogContext, d time.Duration, timeout time.Duration) {
 	ticker := time.NewTicker(d)
 	for {
-		done, errored := UpdateSceneMapAsync(ctx)
+		done, errored := UpdateSceneMapAsync(ctx, timeout)
 		select {
 		case <-done:
 		case err := <-errored:
