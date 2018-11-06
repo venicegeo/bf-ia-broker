@@ -55,7 +55,7 @@ func serveAction(*cli.Context) {
 
 	if len(util.GetLandsatHost()) != 0 {
 		util.LogInfo(logContext, fmt.Sprintf("Starting Landsat scene list query loop for host: '%s'", util.GetLandsatHost()))
-		go landsat.UpdateSceneMapOnTicker(30*time.Minute, 15*time.Minute, logContext)
+		go landsat.UpdateSceneMapOnTicker(logContext, 30*time.Minute, 15*time.Minute)
 	} else {
 		util.LogAlert(logContext, "No Landsat host found, not starting Landsat scene list query loop")
 	}
