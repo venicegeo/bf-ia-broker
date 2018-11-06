@@ -48,16 +48,19 @@ var sampleSceneMapCSV = []byte(
 		collection1ID2 + "," + goodLandSatID2 + ",2017-04-11 05:36:29.349932,0.0," + l1gtDataType + ",149,39,29.22165,72.41205,31.34742,74.84666," + l1gtLandSatURL + "\n",
 )
 
-type mockAWSHandler struct{}
+type mockAWSHandler struct {
+	lagTime time.Duration
+}
 
 func (h mockAWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	time.Sleep(h.lagTime)
 	gzipWriter := gzip.NewWriter(w)
 	gzipWriter.Write(sampleSceneMapCSV)
 	gzipWriter.Close()
 }
 
 func TestMain(m *testing.M) {
-	mockAWSServer := httptest.NewServer(mockAWSHandler{})
+	mockAWSServer := httptest.NewServer(mockAWSHandler{lagTime: 0 * time.Second})
 	defer mockAWSServer.Close()
 	os.Setenv("LANDSAT_HOST", mockAWSServer.URL)
 	code := m.Run()
@@ -126,7 +129,7 @@ func TestGetSceneFolderURL_L1GTNotInSceneMap(t *testing.T) {
 }
 
 func TestUpdateSceneMapAsync_Success(t *testing.T) {
-	done, errored := UpdateSceneMapAsync(mockLogContext{})
+	done, errored := UpdateSceneMapAsync(mockLogContext{}, 10*time.Second)
 	select {
 	case <-done:
 		return
@@ -137,8 +140,29 @@ func TestUpdateSceneMapAsync_Success(t *testing.T) {
 	}
 }
 
+func TestUpdateSceneMapAsync_Timeout(t *testing.T) {
+	originalLandsatHost := os.Getenv("LANDSAT_HOST")
+	defer func() {
+		os.Setenv("LANDSAT_HOST", originalLandsatHost)
+	}()
+
+	mockAWSServer := httptest.NewServer(mockAWSHandler{lagTime: 1 * time.Second})
+	defer mockAWSServer.Close()
+	os.Setenv("LANDSAT_HOST", mockAWSServer.URL)
+
+	done, errored := UpdateSceneMapAsync(mockLogContext{}, 100*time.Millisecond)
+	select {
+	case <-done:
+		assert.Fail(t, "Expected timeout")
+	case err := <-errored:
+		assert.Equal(t, ErrUpdateSceneMapTimedOut, err)
+	case <-time.After(150 * time.Millisecond):
+		assert.Fail(t, "Got neither done nor expected timeout")
+	}
+}
+
 func TestUpdateSceneMapOnTicker(t *testing.T) {
-	go UpdateSceneMapOnTicker(500*time.Millisecond, mockLogContext{})
+	go UpdateSceneMapOnTicker(500*time.Millisecond, 10*time.Second, mockLogContext{})
 
 	<-time.After(100 * time.Millisecond)
 	assert.True(t, SceneMapIsReady, "Scene map not ready immediately after scene map ticker update")
