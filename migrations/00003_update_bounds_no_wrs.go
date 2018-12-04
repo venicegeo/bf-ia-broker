@@ -40,7 +40,6 @@ func Up00003(tx *sql.Tx) error {
 		WHERE corner_ll IS NOT NULL
 	) AS q1 
 	WHERE product_id = q1.pid;
-	VACUUM ANALYZE scenes;
 	`)
 	return err
 }
